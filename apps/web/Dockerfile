@@ -16,4 +16,4 @@ COPY apps/web apps/web
 
 EXPOSE 3000
 
-CMD ["pnpm", "--filter", "@unidine/web", "dev", "--hostname", "0.0.0.0"]
+CMD ["pnpm", "--filter", "@platewise/web", "dev", "--hostname", "0.0.0.0"]

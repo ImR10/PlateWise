@@ -31,6 +31,6 @@ def test_status_reports_service_metadata() -> None:
 
     assert response.status_code == 200
     body = response.json()
-    assert body["service"] == "UniDine API"
+    assert body["service"] == "PlateWise API"
     assert body["status"] == "ok"
     assert body["environment"] == "development"

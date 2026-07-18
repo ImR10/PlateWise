@@ -1,1 +1,1 @@
-"""UniDine API package."""
+"""PlateWise API package."""

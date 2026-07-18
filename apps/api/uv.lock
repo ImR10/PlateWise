@@ -504,7 +504,7 @@ wheels = [
 ]
 
 [[package]]
-name = "unidine-api"
+name = "platewise-api"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

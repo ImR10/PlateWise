@@ -1,8 +1,8 @@
-# UniDine Architecture
+# PlateWise Architecture
 
 ## Current foundation
 
-UniDine is a small monorepo with separately deployable web and API applications backed by
+PlateWise is a small monorepo with separately deployable web and API applications backed by
 PostgreSQL. Docker Compose provides a reproducible development environment without forcing either
 developer to install matching language runtimes or databases locally.
 
@@ -69,4 +69,3 @@ This scaffold contains no authentication, analytics, health profiles, calorie-ta
 live menu ingestion, scraping, recommendation engine, production deployment configuration, or
 medical claims. The single `Campus` model exists to prove database and migration wiring, not to fix
 the future domain model prematurely.
-

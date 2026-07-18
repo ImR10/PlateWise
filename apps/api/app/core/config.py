@@ -4,9 +4,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    app_name: str = "UniDine API"
+    app_name: str = "PlateWise API"
     app_env: str = "development"
-    database_url: str = "postgresql+psycopg://unidine:unidine_dev_password@db:5432/unidine"
+    database_url: str = "postgresql+psycopg://platewise:platewise_dev_password@db:5432/platewise"
     cors_origins: str = "http://localhost:3000"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")

@@ -1,5 +1,6 @@
 {
-  "name": "@unidine/web",
+  "name": "@platewise/web",
+  "description": "PlateWise student-facing web application",
   "version": "0.1.0",
   "private": true,
   "scripts": {

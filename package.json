@@ -1,12 +1,12 @@
 {
-  "name": "unidine",
+  "name": "platewise",
   "private": true,
   "packageManager": "pnpm@11.13.1",
   "scripts": {
-    "web:dev": "pnpm --filter @unidine/web dev",
-    "web:test": "pnpm --filter @unidine/web test",
-    "web:lint": "pnpm --filter @unidine/web lint",
-    "web:format": "pnpm --filter @unidine/web format",
-    "web:format:check": "pnpm --filter @unidine/web format:check"
+    "web:dev": "pnpm --filter @platewise/web dev",
+    "web:test": "pnpm --filter @platewise/web test",
+    "web:lint": "pnpm --filter @platewise/web lint",
+    "web:format": "pnpm --filter @platewise/web format",
+    "web:format:check": "pnpm --filter @platewise/web format:check"
   }
 }

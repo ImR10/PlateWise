@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "UniDine",
-  description: "A campus dining recommendation foundation.",
+  title: "PlateWise",
+  description: "A student-built campus dining recommendation proof of concept.",
 };
 
 export default function RootLayout({

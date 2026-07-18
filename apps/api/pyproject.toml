@@ -1,7 +1,7 @@
 [project]
-name = "unidine-api"
+name = "platewise-api"
 version = "0.1.0"
-description = "UniDine API"
+description = "PlateWise campus dining recommendation API"
 requires-python = ">=3.12,<3.13"
 dependencies = [
   "alembic>=1.16.4,<2",
@@ -37,4 +37,3 @@ line-length = 100
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
-

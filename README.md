@@ -1,9 +1,17 @@
-# UniDine
+# PlateWise
 
-UniDine is an early campus-dining application foundation. The current scaffold provides a
-responsive Next.js frontend, a typed FastAPI backend, and PostgreSQL persistence. Authorized menu
-ingestion, nutrition normalization, recommendations, and user preferences are intentionally out of
-scope for this first milestone.
+PlateWise is a student-built proof of concept that uses dining-hall menu and nutrition data to help
+students find foods that match their preferences and goals. The intended experience can rank
+individual menu items and suggest practical meal combinations using inputs such as calorie ranges,
+protein targets, vegetarian or vegan preferences, and allergen exclusions.
+
+The current repository is an application foundation: it provides a responsive Next.js frontend, a
+typed FastAPI backend, and PostgreSQL persistence. Menu ingestion, nutrition normalization,
+recommendations, and user preferences are planned capabilities and are not implemented yet.
+
+> PlateWise is an independent student-built proof of concept and is not affiliated with, endorsed
+> by, or an official service of the University of Georgia or any dining-data provider. Users should
+> consult official dining resources for current ingredient and allergen information.
 
 ## Architecture
 

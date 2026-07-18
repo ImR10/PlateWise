@@ -9,7 +9,7 @@ export default async function Home() {
       <div className="mx-auto grid min-h-[calc(100vh-5rem)] max-w-6xl items-center gap-12 lg:grid-cols-[1.2fr_0.8fr]">
         <section>
           <p className="text-sm font-bold tracking-[0.28em] text-emerald-800 uppercase">
-            UniDine
+            PlateWise
           </p>
           <h1 className="mt-5 max-w-3xl text-5xl leading-[1.05] font-semibold tracking-tight sm:text-7xl">
             A clearer way to navigate campus dining.

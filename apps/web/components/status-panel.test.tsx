@@ -9,7 +9,7 @@ describe("StatusPanel", () => {
       <StatusPanel
         result={{
           connected: true,
-          data: { service: "UniDine API", status: "ok", environment: "test" },
+          data: { service: "PlateWise API", status: "ok", environment: "test" },
         }}
       />,
     );
