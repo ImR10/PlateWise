@@ -1,14 +1,25 @@
+import os
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
 
 from alembic import context
 from app.core.config import settings
+from app.db import models  # noqa: F401  (registers all models on Base.metadata)
 from app.db.base import Base
-from app.models import Campus  # noqa: F401
 
 config = context.config
-config.set_main_option("sqlalchemy.url", settings.database_url)
+
+# URL resolution order:
+#   1. A URL already set on the Alembic config (e.g. injected by the test
+#      harness to target a dedicated ``*_test`` database).
+#   2. The DATABASE_URL environment variable.
+#   3. Application settings.
+# The alembic.ini placeholder ("driver://...") is treated as "unset".
+_configured_url = config.get_main_option("sqlalchemy.url")
+if not _configured_url or _configured_url.startswith("driver://"):
+    _configured_url = os.getenv("DATABASE_URL", settings.database_url)
+    config.set_main_option("sqlalchemy.url", _configured_url)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
