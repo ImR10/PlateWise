@@ -13,7 +13,7 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, ForeignKey, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, ForeignKey, Index, String, Text, UniqueConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -24,6 +24,9 @@ if TYPE_CHECKING:
     from app.db.models.institution import Institution
     from app.db.models.menu import MenuOffering
 
+#: Marker for rows whose external origin is unknown (hand-created or pre-import).
+UNKNOWN_SOURCE_SYSTEM = "unknown"
+
 
 class Venue(UUIDPrimaryKeyMixin, TimestampMixin, SourceTrackingMixin, Base):
     """A physical place where food is served (dining hall, cafe, ...)."""
@@ -31,12 +34,23 @@ class Venue(UUIDPrimaryKeyMixin, TimestampMixin, SourceTrackingMixin, Base):
     __tablename__ = "venues"
     __table_args__ = (
         UniqueConstraint("institution_id", "slug", name="uq_venues_institution_id_slug"),
+        Index(
+            "uq_venues_institution_id_source_system_external_id",
+            "institution_id",
+            "source_system",
+            "external_id",
+            unique=True,
+            postgresql_where=text("external_id IS NOT NULL"),
+        ),
     )
 
     institution_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("institutions.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
+    )
+    source_system: Mapped[str] = mapped_column(
+        String(100), nullable=False, server_default=UNKNOWN_SOURCE_SYSTEM
     )
     external_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
@@ -65,12 +79,25 @@ class Station(UUIDPrimaryKeyMixin, TimestampMixin, SourceTrackingMixin, Base):
     """An individual serving area inside a venue (Grill, Salad Bar, ...)."""
 
     __tablename__ = "stations"
-    __table_args__ = (UniqueConstraint("venue_id", "slug", name="uq_stations_venue_id_slug"),)
+    __table_args__ = (
+        UniqueConstraint("venue_id", "slug", name="uq_stations_venue_id_slug"),
+        Index(
+            "uq_stations_venue_id_source_system_external_id",
+            "venue_id",
+            "source_system",
+            "external_id",
+            unique=True,
+            postgresql_where=text("external_id IS NOT NULL"),
+        ),
+    )
 
     venue_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("venues.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
+    )
+    source_system: Mapped[str] = mapped_column(
+        String(100), nullable=False, server_default=UNKNOWN_SOURCE_SYSTEM
     )
     external_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
 

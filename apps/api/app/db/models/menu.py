@@ -20,6 +20,7 @@ from sqlalchemy import (
     Index,
     String,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -32,6 +33,9 @@ if TYPE_CHECKING:
     from app.db.models.imports import DataImport
     from app.db.models.location import Station
     from app.db.models.reports import OfferingReport
+
+#: Marker for rows whose external origin is unknown (hand-created or pre-import).
+UNKNOWN_SOURCE_SYSTEM = "unknown"
 
 
 class MenuOffering(UUIDPrimaryKeyMixin, TimestampMixin, SourceTrackingMixin, Base):
@@ -58,10 +62,22 @@ class MenuOffering(UUIDPrimaryKeyMixin, TimestampMixin, SourceTrackingMixin, Bas
             "meal_period",
         ),
         Index("ix_menu_offerings_menu_item_id_service_date", "menu_item_id", "service_date"),
+        # External identity for idempotent offering upserts (station-scoped).
+        Index(
+            "uq_menu_offerings_station_id_source_system_external_id",
+            "station_id",
+            "source_system",
+            "external_id",
+            unique=True,
+            postgresql_where=text("external_id IS NOT NULL"),
+        ),
     )
 
     station_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("stations.id", ondelete="CASCADE"), nullable=False
+    )
+    source_system: Mapped[str] = mapped_column(
+        String(100), nullable=False, server_default=UNKNOWN_SOURCE_SYSTEM
     )
     #: Pointer into the institution-owned catalog. RESTRICT protects catalog
     #: items from deletion while offerings still reference them.

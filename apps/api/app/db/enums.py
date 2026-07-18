@@ -173,3 +173,96 @@ class ImportStatus(StrEnum):
     COMPLETED = "completed"
     COMPLETED_WITH_ERRORS = "completed_with_errors"
     FAILED = "failed"
+
+
+# ---------------------------------------------------------------------------
+# Data-import foundation (Phase 2) enums
+# ---------------------------------------------------------------------------
+
+
+class NutritionProvenance(StrEnum):
+    """How a nutrition record was obtained.
+
+    This is the coexistence discriminator for :class:`NutritionFacts`: at most
+    one *active* record may exist per ``(menu_item_id, provenance)``, so
+    source-provided and recipe-calculated nutrition never overwrite each other.
+    """
+
+    SOURCE_PROVIDED = "source_provided"
+    RECIPE_CALCULATED = "recipe_calculated"
+    MANUALLY_ENTERED = "manually_entered"
+    ESTIMATED = "estimated"
+
+
+class CalculationStatus(StrEnum):
+    """Completeness of a recipe-based nutrition calculation.
+
+    ``partial`` calculated nutrition must never be presented as authoritative.
+    """
+
+    COMPLETE = "complete"
+    PARTIAL = "partial"
+    FAILED = "failed"
+
+
+class NutritionReviewStatus(StrEnum):
+    """Whether a nutrition record needs human review before it is trusted."""
+
+    NOT_REQUIRED = "not_required"
+    NEEDS_REVIEW = "needs_review"
+    REVIEWED = "reviewed"
+
+
+class IngredientResolutionStatus(StrEnum):
+    """Outcome of resolving a recipe ingredient line to a canonical food.
+
+    Anything other than ``resolved`` means the line cannot contribute trusted
+    nutrition; it is preserved for review rather than silently zeroed.
+    """
+
+    RESOLVED = "resolved"
+    NEEDS_REVIEW = "needs_review"
+    UNSUPPORTED_QUANTITY = "unsupported_quantity"
+    NUTRITION_MATCH_MISSING = "nutrition_match_missing"
+    YIELD_MISSING = "yield_missing"
+    EXCLUDED_NON_NUTRITIVE = "excluded_non_nutritive"
+    INVALID = "invalid"
+
+
+class IngredientMatchMethod(StrEnum):
+    """How a recipe ingredient was matched to a provider food."""
+
+    SOURCE_EXTERNAL_ID = "source_external_id"
+    PROVIDER_SEARCH = "provider_search"
+    MANUAL = "manual"
+    FIXTURE = "fixture"
+    UNMATCHED = "unmatched"
+
+
+class RawOrCooked(StrEnum):
+    """Whether an ingredient quantity refers to its raw or cooked form."""
+
+    RAW = "raw"
+    COOKED = "cooked"
+    UNKNOWN = "unknown"
+
+
+class ImportErrorSeverity(StrEnum):
+    """Severity of a structured import error/warning."""
+
+    WARNING = "warning"
+    ERROR = "error"
+
+
+class ImportErrorStage(StrEnum):
+    """Import pipeline stage at which a structured error was produced."""
+
+    FETCH = "fetch"
+    VALIDATE = "validate"
+    CLASSIFY = "classify"
+    NORMALIZE = "normalize"
+    PARSE_RECIPE = "parse_recipe"
+    RESOLVE_INGREDIENT = "resolve_ingredient"
+    CALCULATE_NUTRITION = "calculate_nutrition"
+    PERSIST = "persist"
+    FINALIZE = "finalize"
