@@ -22,7 +22,10 @@ if not _configured_url or _configured_url.startswith("driver://"):
     config.set_main_option("sqlalchemy.url", _configured_url)
 
 if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+    # Migration setup may run in-process (notably in the integration-test
+    # harness); preserve application loggers so importer observability is not
+    # silently disabled after Alembic configures its own logger.
+    fileConfig(config.config_file_name, disable_existing_loggers=False)
 
 target_metadata = Base.metadata
 

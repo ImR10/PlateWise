@@ -217,10 +217,26 @@ def test_empty_payload_is_non_destructive(db_session: Session) -> None:
     before = _count(db_session, MenuItem)
     assert before == 1
     result = fx.run(db_session, fx.fixture_10_empty())
-    assert result.status == ImportStatus.COMPLETED
+    assert result.status == ImportStatus.COMPLETED_WITH_ERRORS
+    assert result.warning_count == 1
     assert result.counters.created == 0
     # Nothing deleted by a suspiciously empty response.
     assert _count(db_session, MenuItem) == before
+
+
+def test_unchanged_recipe_still_checks_changed_source_nutrition(db_session: Session) -> None:
+    payload = fx.fixture_9_both_nutrition()
+    fx.run(db_session, payload)
+    payload["menu_items"][0]["provided_nutrition"]["nutrients"]["calories"] = "400"
+    result = fx.run(db_session, payload)
+    assert result.status == ImportStatus.COMPLETED_WITH_ERRORS
+    discrepancy = db_session.scalars(
+        select(DataImportError).where(
+            DataImportError.data_import_id == result.import_id,
+            DataImportError.code == "nutrition_discrepancy",
+        )
+    ).all()
+    assert len(discrepancy) == 1
 
 
 def test_structured_errors_link_to_run(db_session: Session) -> None:
@@ -283,6 +299,60 @@ def test_failed_record_rolls_back_its_domain_writes(
         select(DataImportError).where(DataImportError.code == "persist_failed")
     ).all()
     assert len(persist_errors) == 1
+
+
+def test_non_tolerant_failure_rolls_back_full_run_and_redacts_exception(
+    db_session: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    original = repo.upsert_source_nutrition
+
+    def boom(session, menu_item, normalized, import_run):
+        if menu_item.external_id == "item-bad-nutri":
+            raise RuntimeError("SECRET-provider-token")
+        return original(session, menu_item, normalized, import_run)
+
+    monkeypatch.setattr(repo, "upsert_source_nutrition", boom)
+    payload = {
+        "institution": fx.INSTITUTION,
+        "menu_items": [
+            {
+                "source_system": "fixture",
+                "external_id": external_id,
+                "name": external_id,
+                "provided_nutrition": {
+                    "serving_size": "1",
+                    "serving_unit": "each",
+                    "nutrients": {"calories": "100"},
+                },
+            }
+            for external_id in ("item-good-nutri", "item-bad-nutri")
+        ],
+    }
+    result = fx.run(db_session, payload, tolerant=False)
+    assert result.status == ImportStatus.FAILED
+    assert _count(db_session, MenuItem) == 0
+    runs = db_session.scalars(select(DataImport)).all()
+    assert len(runs) == 1 and runs[0].id == result.import_id
+    errors = db_session.scalars(
+        select(DataImportError).where(DataImportError.data_import_id == result.import_id)
+    ).all()
+    assert len(errors) == 1
+    assert "SECRET-provider-token" not in errors[0].message
+
+
+def test_import_lifecycle_logs_stable_fields_without_raw_payload(
+    db_session: Session, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level("INFO", logger="app.imports.service")
+    payload = fx.fixture_1_source_nutrition()
+    payload["private_marker"] = "DO-NOT-LOG-RAW"
+    result = fx.run(db_session, payload)
+    started = next(record for record in caplog.records if record.msg == "import_run_started")
+    completed = next(record for record in caplog.records if record.msg == "import_run_completed")
+    assert started.total_record_count == 1
+    assert completed.import_id == str(result.import_id)
+    assert completed.records_created == 1
+    assert "DO-NOT-LOG-RAW" not in caplog.text
 
 
 # --- Hierarchy & offering idempotency ------------------------------------

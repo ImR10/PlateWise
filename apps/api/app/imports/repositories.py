@@ -375,6 +375,7 @@ def recipe_content_hash(recipe: ImportedRecipe) -> str:
         recipe.yield_quantity,
         recipe.yield_unit,
         recipe.servings,
+        recipe.source_text,
     ]
     for ing in recipe.ingredients:
         parts.extend(
@@ -435,14 +436,19 @@ def upsert_recipe_version(
 
 
 def persist_recipe_ingredients(
-    session: Session, version: RecipeVersion, resolved: list[ResolvedIngredient]
+    session: Session,
+    version: RecipeVersion,
+    resolved: list[ResolvedIngredient],
+    provider_food_ids: dict[tuple[str, str], object],
 ) -> None:
     """Persist ingredient rows for a freshly-created recipe version."""
     for item in resolved:
         parsed = item.parsed
         provider_food_id = None
         if item.provider_food is not None:
-            provider_food_id = _provider_food_pk(session, item.provider_food)
+            provider_food_id = provider_food_ids.get(
+                (item.provider_food.provider, item.provider_food.provider_food_id)
+            )
         session.add(
             RecipeIngredient(
                 recipe_version_id=version.id,
@@ -465,18 +471,6 @@ def persist_recipe_ingredients(
             )
         )
     session.flush()
-
-
-def _provider_food_pk(session: Session, food: ProviderFoodData):
-    row = session.scalar(
-        select(ProviderFood).where(
-            ProviderFood.provider == food.provider,
-            ProviderFood.provider_food_id == food.provider_food_id,
-        )
-    )
-    return row.id if row is not None else None
-
-
 def upsert_calculated_nutrition(
     session: Session,
     menu_item: MenuItem,
@@ -525,6 +519,19 @@ def upsert_calculated_nutrition(
     session.add(facts)
     session.flush()
     return facts, ("updated" if active is not None else "created")
+
+
+def get_active_calculated_nutrition(
+    session: Session, menu_item: MenuItem
+) -> NutritionFacts | None:
+    """Return the active recipe-calculated nutrition row for ``menu_item``."""
+    return session.scalar(
+        select(NutritionFacts).where(
+            NutritionFacts.menu_item_id == menu_item.id,
+            NutritionFacts.provenance == NutritionProvenance.RECIPE_CALCULATED,
+            NutritionFacts.valid_until.is_(None),
+        )
+    )
 
 
 # --- Errors ---------------------------------------------------------------

@@ -17,7 +17,7 @@ from app.imports.nutrition.provider import (
     ProviderFoodData,
     ProviderPortion,
 )
-from app.imports.service import ImportResult, run_import
+from app.imports.service import ImportCounters, ImportResult, run_import
 from app.imports.sources.base import DiningSource, FetchResult
 from app.imports.sources.fixture import FixtureDiningSource
 
@@ -27,6 +27,7 @@ __all__ = [
     "FetchResult",
     "FixtureDiningSource",
     "ImportError_",
+    "ImportCounters",
     "ImportResult",
     "IngredientNutritionProvider",
     "MalformedRecordError",

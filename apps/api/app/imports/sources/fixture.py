@@ -13,6 +13,7 @@ import paths end to end.
 from __future__ import annotations
 
 import copy
+import json
 from typing import Any
 
 from pydantic import ValidationError
@@ -56,6 +57,7 @@ class FixtureDiningSource:
         return self._source_name
 
     def fetch(self) -> FetchResult:
+        _validate_payload_envelope(self._payload)
         raw = copy.deepcopy(self._payload)
 
         institution_raw = raw.get("institution")
@@ -63,17 +65,18 @@ class FixtureDiningSource:
             raise SourceError("fixture payload missing 'institution' object")
         try:
             institution = ImportedInstitution.model_validate(institution_raw)
-            venues = tuple(
-                ImportedVenue.model_validate(v) for v in raw.get("venues", []) or []
-            )
-            stations = tuple(
-                ImportedStation.model_validate(s) for s in raw.get("stations", []) or []
-            )
+            venues = tuple(ImportedVenue.model_validate(v) for v in (raw.get("venues") or []))
+            stations = tuple(ImportedStation.model_validate(s) for s in (raw.get("stations") or []))
         except ValidationError as exc:
             raise SourceError(f"malformed source hierarchy: {exc}") from exc
 
+        for record in (*venues, *stations):
+            if record.source_system != institution.source_system:
+                raise SourceError("source hierarchy contains a conflicting source_system")
+
         menu_items: list[MenuItemParseResult] = []
-        for index, record in enumerate(raw.get("menu_items", []) or []):
+        seen_identities: set[tuple[str, str]] = set()
+        for index, record in enumerate(raw.get("menu_items") or []):
             ref = None
             if isinstance(record, dict):
                 ref = record.get("external_id") or record.get("name")
@@ -89,7 +92,36 @@ class FixtureDiningSource:
                     )
                 )
             else:
-                menu_items.append(MenuItemParseOk(item=item))
+                identity = (
+                    (item.source_system, item.external_id) if item.external_id is not None else None
+                )
+                identity_conflict = item.source_system != institution.source_system
+                recipe_conflict = (
+                    item.recipe is not None
+                    and item.recipe.source_system != institution.source_system
+                )
+                if identity_conflict or recipe_conflict:
+                    menu_items.append(
+                        MenuItemParseError(
+                            record_ref=record_ref,
+                            message="record contains a conflicting source_system",
+                        )
+                    )
+                elif identity is not None and identity in seen_identities:
+                    menu_items.append(
+                        MenuItemParseError(
+                            record_ref=record_ref,
+                            message="duplicate source identity within payload",
+                        )
+                    )
+                else:
+                    if identity is not None:
+                        seen_identities.add(identity)
+                    menu_items.append(MenuItemParseOk(item=item))
+
+        warnings = ()
+        if not menu_items and self._requested_scope is None:
+            warnings = ("suspiciously_empty_payload",)
 
         return FetchResult(
             institution=institution,
@@ -98,7 +130,47 @@ class FixtureDiningSource:
             stations=stations,
             menu_items=tuple(menu_items),
             requested_scope=self._requested_scope,
+            warnings=warnings,
         )
+
+
+MAX_PAYLOAD_BYTES = 5_000_000
+MAX_JSON_DEPTH = 30
+MAX_HIERARCHY_RECORDS = 5_000
+MAX_MENU_ITEMS = 10_000
+
+
+def _validate_payload_envelope(payload: dict[str, Any]) -> None:
+    """Reject malformed or disproportionate fixture envelopes before copying them."""
+    for key, limit in (
+        ("venues", MAX_HIERARCHY_RECORDS),
+        ("stations", MAX_HIERARCHY_RECORDS),
+        ("menu_items", MAX_MENU_ITEMS),
+    ):
+        value = payload.get(key, [])
+        if value is None:
+            value = []
+        if not isinstance(value, list):
+            raise SourceError(f"fixture payload field {key!r} must be a list")
+        if len(value) > limit:
+            raise SourceError(f"fixture payload field {key!r} exceeds the record limit")
+
+    try:
+        encoded = json.dumps(payload, separators=(",", ":"), ensure_ascii=False)
+    except (TypeError, ValueError) as exc:
+        raise SourceError("fixture payload must be valid JSON data") from exc
+    if len(encoded.encode("utf-8")) > MAX_PAYLOAD_BYTES:
+        raise SourceError("fixture payload exceeds the byte-size limit")
+
+    stack: list[tuple[object, int]] = [(payload, 1)]
+    while stack:
+        value, depth = stack.pop()
+        if depth > MAX_JSON_DEPTH:
+            raise SourceError("fixture payload exceeds the JSON depth limit")
+        if isinstance(value, dict):
+            stack.extend((child, depth + 1) for child in value.values())
+        elif isinstance(value, list):
+            stack.extend((child, depth + 1) for child in value)
 
 
 def _summarize_validation_error(exc: ValidationError) -> str:
