@@ -51,7 +51,7 @@ workflow.
 
 ```bash
 git clone <repository-url>
-cd unidine
+cd platewise
 cp .env.example .env
 docker compose up --build
 ```

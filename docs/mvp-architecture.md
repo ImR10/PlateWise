@@ -1,4 +1,4 @@
-# UniDine MVP - System Architecture
+# PlateWise MVP - System Architecture
 
 Scope: MVP only. One campus (UGA), guest mode, local-browser preferences, deterministic
 recommendations, single backend service, and the authorized dining-hall admin dashboard as the data

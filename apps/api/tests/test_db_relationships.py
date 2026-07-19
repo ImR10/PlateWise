@@ -63,8 +63,10 @@ def test_menu_item_nutrition(db_session: Session) -> None:
 
     db_session.refresh(item)
     assert [n.id for n in item.nutrition_facts] == [facts.id]
-    assert item.current_nutrition is not None
-    assert item.current_nutrition.calories == 240
+    assert [n.id for n in item.active_nutrition] == [facts.id]
+    display = item.display_nutrition()
+    assert display is not None
+    assert display.calories == 240
     assert facts.menu_item.id == item.id
 
 

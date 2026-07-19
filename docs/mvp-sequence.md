@@ -1,4 +1,4 @@
-# UniDine MVP - Sequence Flow
+# PlateWise MVP - Sequence Flow
 
 Scope: MVP only. One campus (UGA), guest mode, local-browser preferences, deterministic
 recommendations, and explicit freshness/allergen safety handling.
@@ -41,7 +41,7 @@ sequenceDiagram
     Web-->>Admin: Confirmation + data-quality status
 
     Note over Student,DB: Phase B - Student browses today's menu (guest mode)
-    Student->>Web: Open UniDine (select UGA)
+    Student->>Web: Open PlateWise (select UGA)
     Web->>API: GET /campuses/uga/dining-halls
     API->>DB: Fetch halls
     DB-->>API: Halls
@@ -85,7 +85,7 @@ sequenceDiagram
 
 ## Key MVP decisions encoded in the diagram
 
-- **Admin dashboard = authorized data source.** The manager writes food info; UniDine stores a raw
+- **Admin dashboard = authorized data source.** The manager writes food info; PlateWise stores a raw
   snapshot (with `retrieved_at` / `source_updated_at` / hash) then upserts normalized records
   idempotently - no scraping, no duplicates on re-save.
 - **Guest mode, no auth, local-first prefs.** Student targets/preferences live in `localStorage`; no

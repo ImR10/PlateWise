@@ -24,15 +24,18 @@ from app.db.models.catalog import (
     MenuItemIngredient,
     NutritionFacts,
 )
-from app.db.models.imports import DataImport
+from app.db.models.imports import DataImport, DataImportError
 from app.db.models.institution import Institution
 from app.db.models.location import Station, Venue
 from app.db.models.menu import MenuOffering
+from app.db.models.providers import ProviderFood, ProviderFoodPortion
+from app.db.models.recipes import RecipeIngredient, RecipeVersion
 from app.db.models.reports import MenuItemSuggestion, OfferingReport
 
 __all__ = [
     "Allergen",
     "DataImport",
+    "DataImportError",
     "DietaryTag",
     "Ingredient",
     "Institution",
@@ -45,6 +48,10 @@ __all__ = [
     "MenuOffering",
     "NutritionFacts",
     "OfferingReport",
+    "ProviderFood",
+    "ProviderFoodPortion",
+    "RecipeIngredient",
+    "RecipeVersion",
     "Station",
     "Venue",
 ]

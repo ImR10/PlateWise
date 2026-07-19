@@ -29,6 +29,12 @@ EXPECTED_TABLES = {
     "offering_reports",
     "menu_item_suggestions",
     "data_imports",
+    # Data-import foundation (migration 0002).
+    "recipe_versions",
+    "recipe_ingredients",
+    "provider_foods",
+    "provider_food_portions",
+    "import_errors",
 }
 
 EXPECTED_ENUMS = {
@@ -47,6 +53,15 @@ EXPECTED_ENUMS = {
     "suggestion_status",
     "import_source_type",
     "import_status",
+    # Data-import foundation (migration 0002).
+    "nutrition_provenance",
+    "nutrition_review_status",
+    "calculation_status",
+    "ingredient_resolution_status",
+    "ingredient_match_method",
+    "raw_or_cooked",
+    "import_error_severity",
+    "import_error_stage",
 }
 
 
@@ -64,7 +79,7 @@ def test_all_tables_created(engine: Engine) -> None:
 def test_alembic_at_head(engine: Engine) -> None:
     with engine.connect() as conn:
         version = conn.execute(text("SELECT version_num FROM alembic_version")).scalar()
-    assert version == "20260718_0001"
+    assert version == "20260718_0002"
 
 
 def test_enum_types_created(engine: Engine) -> None:
@@ -77,9 +92,10 @@ def test_partial_and_special_constraints_present(engine: Engine) -> None:
     """Spot-check the non-trivial indexes/constraints made it into the schema."""
     inspector = inspect(engine)
 
-    # Partial unique index enforcing one active nutrition record per item.
+    # Partial unique index enforcing one active nutrition record per
+    # (menu item, provenance) so source and calculated nutrition coexist.
     nutrition_indexes = {ix["name"] for ix in inspector.get_indexes("nutrition_facts")}
-    assert "uq_nutrition_facts_active_per_menu_item" in nutrition_indexes
+    assert "uq_nutrition_facts_active_per_menu_item_provenance" in nutrition_indexes
 
     # Partial unique index enforcing one active report per reporter/category.
     report_indexes = {ix["name"] for ix in inspector.get_indexes("offering_reports")}

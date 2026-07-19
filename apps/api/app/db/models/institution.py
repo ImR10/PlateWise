@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, String, UniqueConstraint
+from sqlalchemy import Boolean, Index, String, UniqueConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -22,12 +22,25 @@ if TYPE_CHECKING:
     from app.db.models.location import Venue
     from app.db.models.reports import MenuItemSuggestion
 
+#: Marker for rows whose external origin is unknown (hand-created or pre-import).
+UNKNOWN_SOURCE_SYSTEM = "unknown"
+
 
 class Institution(UUIDPrimaryKeyMixin, TimestampMixin, SourceTrackingMixin, Base):
     """A university, hospital, corporate campus, or similar organization."""
 
     __tablename__ = "institutions"
-    __table_args__ = (UniqueConstraint("slug", name="uq_institutions_slug"),)
+    __table_args__ = (
+        UniqueConstraint("slug", name="uq_institutions_slug"),
+        # External identity for idempotent upserts (scoped by source system).
+        Index(
+            "uq_institutions_source_system_external_id",
+            "source_system",
+            "external_id",
+            unique=True,
+            postgresql_where=text("external_id IS NOT NULL"),
+        ),
+    )
 
     #: Human-readable display name, e.g. "University of Georgia".
     name: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -41,6 +54,10 @@ class Institution(UUIDPrimaryKeyMixin, TimestampMixin, SourceTrackingMixin, Base
     )
     #: IANA timezone name used to interpret service dates and meal windows.
     timezone: Mapped[str] = mapped_column(String(64), nullable=False, server_default="UTC")
+    #: External source system this institution was imported from.
+    source_system: Mapped[str] = mapped_column(
+        String(100), nullable=False, server_default=UNKNOWN_SOURCE_SYSTEM
+    )
     #: Identifier from an external source system (FoodPro, Nutrislice, ...).
     external_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     #: Whether the institution is currently served by PlateWise.
