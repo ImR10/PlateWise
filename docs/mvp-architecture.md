@@ -8,16 +8,19 @@ source of record. No auth service, Redis, Celery, workers, or microservices at t
 
 ```mermaid
 flowchart TB
-    subgraph Clients [Clients - mobile-first browsers]
+    subgraph Clients [Clients]
         Student["Student<br/>menu browse + recommendations"]
         Admin["Dining Hall Admin/Manager<br/>maintains food info"]
     end
 
-    subgraph Web [web - Next.js 16 / React 19 / TS / Tailwind]
+    subgraph User [user - Next.js 16 / React 19 / TS / Tailwind]
         StudentUI["Student app routes<br/>/, /menus, /menus/[id], /recommend, /recommend/result"]
-        AdminUI["Admin dashboard routes<br/>menu + food editing"]
         LocalPrefs["localStorage<br/>targets, dietary prefs, dislikes"]
         ApiClient["Typed API client<br/>(OpenAPI-generated types)"]
+    end
+
+    subgraph AdminApp [admin - Tauri 2 / React / TS desktop app]
+        AdminUI["Admin dashboard<br/>menu + food editing"]
     end
 
     subgraph API [api - FastAPI single service]
@@ -26,39 +29,40 @@ flowchart TB
         Domain["Domain + normalization"]
         Providers["providers/authorized_uga<br/>fetch + normalize"]
         Ingestion["ingestion<br/>raw snapshot, hash, idempotent upsert"]
-        Repos["repositories<br/>data access"]
         Rec["recommendations<br/>deterministic constrained search"]
     end
 
-    Migrate["migrate (one-shot)<br/>Alembic upgrade head"]
+    subgraph DBPackage [db - platewise_db package]
+        Models["SQLAlchemy models + metadata"]
+        Repos["persistence repositories"]
+        Migrations["Alembic revisions"]
+    end
+
     DB[("db - PostgreSQL 17")]
-    IngestCLI["Ingestion CLI<br/>uv run python -m app.ingestion.run --campus uga"]
 
     Student -->|HTTPS| StudentUI
-    Admin -->|HTTPS| AdminUI
+    Admin -->|desktop app| AdminUI
     StudentUI --> LocalPrefs
     StudentUI --> ApiClient
-    AdminUI --> ApiClient
     ApiClient -->|REST / JSON| Router
+    AdminUI -->|REST / JSON| Router
 
     Router --> Schemas
     Router --> Repos
     Router --> Rec
     Rec --> Repos
+    Repos --> Models
     Repos --> DB
 
     AdminUI -->|POST food info| Router
     Router --> Ingestion
-    IngestCLI --> Providers
     Providers --> Ingestion
     Ingestion --> Repos
-
-    Migrate -->|apply schema before API starts| DB
+    Migrations -->|alembic upgrade head| DB
 
     subgraph Compose [Docker Compose - dev]
-        Web
+        User
         API
-        Migrate
         DB
     end
 ```
@@ -82,14 +86,20 @@ flowchart LR
 
 ## Key architectural decisions
 
-- **Single deployable backend** with internal modules (`api/v1`, `models`, `schemas`,
-  `repositories`, `domain`, `providers/authorized_uga`, `ingestion`, `recommendations`) - no
-  microservices.
+- **Single deployable backend** in `api/src/platewise_api`, with routes, schemas, importer
+  orchestration, source adapters, and recommendations. Persistence is an explicit dependency in
+  `db/src/platewise_db`; it is a package boundary, not another network service.
+- **Separate admin desktop client (updated 2026-07-20).** The dining-hall staff dashboard is a
+  separate Tauri 2 + React + TypeScript desktop application (`apps/admin`), not routes inside the
+  student web app; earlier revisions of this document that placed admin routes inside `web` are
+  superseded. `api` remains the single backend for both clients, `db` owns the persistence
+  package and migrations, and no client connects to PostgreSQL directly. The admin app runs on
+  the host and is not a Compose service.
 - **Admin dashboard is the authorized data source** for the MVP; writes flow through the same
   FastAPI service into raw snapshots, then idempotent normalized upserts (`(provider, external_id,
   service_date)` unique). Re-import of the same snapshot is a no-op.
-- **One-shot `migrate` service** applies Alembic migrations after the DB is healthy and before the
-  API starts, so nobody runs against an outdated schema.
+- **Alembic is owned by `db`.** Migrations run from `db/alembic`; Compose intentionally has only
+  `db`, `api`, and `user` services and does not add an automation service.
 - **Recommendations are computed, not stored.** `POST /api/v1/recommendations` runs a deterministic
   constrained search and returns plates with totals, confidence, freshness, and warning codes.
 - **Local-first preferences.** Student targets, dietary preferences, and dislikes live in
@@ -102,6 +112,6 @@ flowchart LR
 
 ## Deliberately excluded from the MVP
 
-Authentication/accounts, profile sync, Redis, Celery/queues, Kubernetes, native apps, multi-campus
-abstractions beyond a simple provider boundary, ML/LLM food selection, and persistent recommendation
-history.
+Authentication/accounts, profile sync, Redis, Celery/queues, Kubernetes, native student apps,
+multi-campus abstractions beyond a simple provider boundary, ML/LLM food selection, and persistent
+recommendation history.

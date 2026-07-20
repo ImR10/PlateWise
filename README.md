@@ -15,11 +15,12 @@ recommendations, and user preferences are planned capabilities and are not imple
 
 ## Architecture
 
-| Service | Stack | Port | Purpose |
+| Application | Stack | Port | Purpose |
 | --- | --- | --- | --- |
-| `web` | Next.js, TypeScript, Tailwind CSS | `3000` | Student-facing interface |
-| `api` | FastAPI, SQLAlchemy, Alembic | `8000` | API and future recommendation logic |
-| `db` | PostgreSQL 17 | `5432` | Application data |
+| `user` | Next.js, TypeScript, Tailwind CSS | `3000` | Student-facing interface (mobile-first) |
+| `admin` | Tauri 2, React, TypeScript | native window | Dining-hall staff desktop app (host-run, not in Compose) |
+| `api` | FastAPI | `8000` | Single backend shared by both clients |
+| `db` | SQLAlchemy, Alembic, PostgreSQL 17 | `5432` | Persistence package and database service |
 
 See [docs/architecture.md](docs/architecture.md) for design rationale and future module boundaries.
 
@@ -27,8 +28,10 @@ See [docs/architecture.md](docs/architecture.md) for design rationale and future
 
 ```text
 apps/
-  api/                 FastAPI service, migrations, and tests
-  web/                 Next.js application and component tests
+  user/                Next.js application and component tests
+  admin/               Tauri desktop application for dining-hall staff
+api/                    FastAPI service, orchestration, schemas, and tests
+db/                     SQLAlchemy models, repositories, migrations, and tests
 docs/
   architecture.md
 compose.yaml
@@ -38,6 +41,9 @@ pnpm-lock.yaml
 pnpm-workspace.yaml
 ```
 
+Only user-facing client applications live under `apps/`. The API depends explicitly on the
+editable `platewise-db` package; neither client connects to PostgreSQL directly.
+
 ## Prerequisites
 
 - Docker Desktop with Docker Compose v2
@@ -45,7 +51,8 @@ pnpm-workspace.yaml
 - About 2 GB of free disk space for images and development volumes
 
 Node, Python, pnpm, uv, and PostgreSQL do not need to be installed on the host for the Docker
-workflow.
+workflow, which covers `db`, `api`, and `user`. The admin desktop app is the exception: it runs on
+the host, not in Compose. See [Admin desktop app](#admin-desktop-app).
 
 ## Initial setup
 
@@ -72,8 +79,8 @@ deployed environment. Never commit `.env`.
 | `DATABASE_URL` | api | SQLAlchemy connection URL using Compose hostname `db` |
 | `APP_ENV` | api | Runtime environment label |
 | `CORS_ORIGINS` | api | Comma-separated allowed browser origins |
-| `API_INTERNAL_URL` | web | Server-side URL used inside Compose |
-| `NEXT_PUBLIC_API_URL` | web | Browser-visible API base URL reserved for client calls |
+| `API_INTERNAL_URL` | user | Server-side URL used inside Compose |
+| `NEXT_PUBLIC_API_URL` | user | Browser-visible API base URL reserved for client calls |
 
 ## Everyday Docker workflow
 
@@ -89,7 +96,7 @@ volumes so Linux container packages never overwrite host directories.
 After pulling dependency changes, rebuild:
 
 ```bash
-docker compose build --no-cache api web
+docker compose build --no-cache api user
 docker compose up
 ```
 
@@ -97,45 +104,78 @@ Open service shells:
 
 ```bash
 docker compose exec api sh
-docker compose exec web sh
+docker compose exec user sh
 ```
 
 ## Tests, linting, and formatting
 
 ```bash
 docker compose exec api uv run pytest
-docker compose exec api uv run ruff check .
-docker compose exec api uv run ruff format --check .
+docker compose exec api uv run ruff check src tests
+docker compose exec api uv run ruff format --check src tests
+docker compose exec -w /workspace/db api uv run --project /workspace/api pytest
+docker compose exec -w /workspace/db api uv run --project /workspace/api ruff check src tests alembic
+docker compose exec -w /workspace/db api uv run --project /workspace/api ruff format --check src tests alembic
 
-docker compose exec web pnpm test
-docker compose exec web pnpm lint
-docker compose exec web pnpm format:check
+pnpm user:test
+pnpm user:lint
+pnpm user:format:check
 ```
 
 Apply automatic formatting with:
 
 ```bash
-docker compose exec api uv run ruff format .
-docker compose exec web pnpm format
+docker compose exec api uv run ruff format src tests
+pnpm user:format
 ```
+
+## Admin desktop app
+
+`apps/admin` is a separate desktop application for dining-hall staff, built with Tauri 2, React,
+and TypeScript. It is a native window, so it runs on the host rather than inside Docker Compose.
+`api` remains the single backend for both clients; the admin app has no backend of its own
+and never connects to PostgreSQL directly.
+
+Additional host prerequisites (admin development only):
+
+- Node.js 22+ with pnpm 11 (`corepack enable` provides the pinned version)
+- Rust stable 1.77.2 or newer via [rustup](https://rustup.rs) (macOS also needs the Xcode
+  Command Line Tools)
+
+Everyday commands, from the repository root:
+
+```bash
+pnpm install               # once, and after dependency changes
+pnpm admin:desktop         # run the native desktop app (Tauri dev mode, hot reload)
+pnpm admin:dev             # frontend only, in a browser at http://localhost:1420
+pnpm admin:test            # component smoke tests (Vitest)
+pnpm admin:lint            # ESLint
+pnpm admin:format:check    # Prettier
+pnpm admin:typecheck       # TypeScript
+pnpm admin:build           # type-check + production frontend build
+```
+
+The current milestone ships only the application-shell foundation: the window opens and renders,
+with no API integration, authentication, or catalog features yet.
 
 ## Database migrations
 
 Apply all migrations:
 
 ```bash
-docker compose exec api uv run alembic upgrade head
+docker compose exec -w /workspace/db api uv run --project /workspace/api alembic upgrade head
 ```
 
 Create a migration after changing SQLAlchemy models, then inspect the generated file before applying
 it:
 
 ```bash
-docker compose exec api uv run alembic revision --autogenerate -m "describe change"
-docker compose exec api uv run alembic upgrade head
+docker compose exec -w /workspace/db api uv run --project /workspace/api alembic revision --autogenerate -m "describe change"
+docker compose exec -w /workspace/db api uv run --project /workspace/api alembic upgrade head
 ```
 
-The initial migration creates the `campuses` table.
+The two existing revisions create the PlateWise schema and data-import foundation. Migration
+revision identifiers and history are owned by `db/alembic/`.
 
 ## Reset local data
 
@@ -144,14 +184,14 @@ This permanently removes the local Compose database volume:
 ```bash
 docker compose down -v
 docker compose up --build
-docker compose exec api uv run alembic upgrade head
+docker compose exec -w /workspace/db api uv run --project /workspace/api alembic upgrade head
 ```
 
 ## Troubleshooting
 
 - **A port is already in use:** stop the process using `3000`, `8000`, or `5432`, or adjust the host
   side of that mapping in `compose.yaml`.
-- **A service is unhealthy:** run `docker compose ps` and `docker compose logs api db web`.
+- **A service is unhealthy:** run `docker compose ps` and `docker compose logs api db user`.
 - **Dependencies look stale:** rebuild the affected image and recreate its dependency volume with
   `docker compose down -v` only if a normal rebuild does not resolve it. Note that `-v` also deletes
   the development database.

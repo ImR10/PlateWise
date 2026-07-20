@@ -3,10 +3,19 @@
   "private": true,
   "packageManager": "pnpm@11.13.1",
   "scripts": {
-    "web:dev": "pnpm --filter @platewise/web dev",
-    "web:test": "pnpm --filter @platewise/web test",
-    "web:lint": "pnpm --filter @platewise/web lint",
-    "web:format": "pnpm --filter @platewise/web format",
-    "web:format:check": "pnpm --filter @platewise/web format:check"
+    "user:dev": "pnpm --filter @platewise/user dev",
+    "user:build": "pnpm --filter @platewise/user build",
+    "user:test": "pnpm --filter @platewise/user test",
+    "user:lint": "pnpm --filter @platewise/user lint",
+    "user:format": "pnpm --filter @platewise/user format",
+    "user:format:check": "pnpm --filter @platewise/user format:check",
+    "admin:dev": "pnpm --filter @platewise/admin dev",
+    "admin:desktop": "pnpm --filter @platewise/admin tauri dev",
+    "admin:build": "pnpm --filter @platewise/admin build",
+    "admin:test": "pnpm --filter @platewise/admin test",
+    "admin:lint": "pnpm --filter @platewise/admin lint",
+    "admin:format": "pnpm --filter @platewise/admin format",
+    "admin:format:check": "pnpm --filter @platewise/admin format:check",
+    "admin:typecheck": "pnpm --filter @platewise/admin typecheck"
   }
 }

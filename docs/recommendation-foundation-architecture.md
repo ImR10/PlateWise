@@ -6,7 +6,7 @@ Phase 1 audit: `docs/recommendation-foundation-audit.md`.
 ## Scope
 
 A standalone, deterministic, testable recommendation engine in
-`app/recommendations/`. It accepts normalized menu-item inputs and user
+`api/src/platewise_api/recommendations/`. It accepts normalized menu-item inputs and user
 preference/goal inputs and produces eligible items, excluded items with
 machine-readable reasons, ranked recommendations with transparent scoring,
 uncertainty warnings, and (opt-in) a basic assembled plate.
@@ -32,7 +32,7 @@ Read API response ── adapter (later milestone) ──► RecommendationItem
 ## Package layout
 
 ```text
-app/recommendations/
+api/src/platewise_api/recommendations/
   contracts.py     # frozen Pydantic v2 DTOs (input + result)
   enums.py         # goals, safety modes, reason/caution/warning codes
   exceptions.py    # RecommendationError, DuplicateItemIdError
@@ -43,12 +43,12 @@ app/recommendations/
   service.py       # orchestration + structured completion logging
 ```
 
-The engine reuses pure, ORM-free shared modules — `app.db.enums` (StrEnums),
-`app.imports.contracts` (`NutrientValues`, bounded Decimal types),
-`app.imports.decimal_utils` (ROUND_HALF_UP policy), and
-`app.imports.normalizers.normalize_name` — rather than defining a second
+The engine reuses the explicit DB dependency's pure modules — `platewise_db.enums` (StrEnums),
+`platewise_api.imports.contracts` (`NutrientValues`, bounded Decimal types),
+`platewise_db.decimal_utils` (ROUND_HALF_UP policy), and
+`platewise_db.normalizers.normalize_name` — rather than defining a second
 nutrition or normalization policy. It imports nothing from FastAPI routes,
-SQLAlchemy models, or Read API schemas.
+SQLAlchemy models, FastAPI routes, or Read API schemas.
 
 ## Contracts
 
@@ -104,7 +104,7 @@ data as safe; `permissive` mode keeps such items with explicit cautions.
 
 ## Scoring model
 
-Documented fully in `app/recommendations/scoring.py`
+Documented fully in `api/src/platewise_api/recommendations/scoring.py`
 (`SCORING_POLICY_VERSION = "1.0.0"`; any change to weights, references, or
 formulas bumps it).
 
@@ -212,7 +212,7 @@ preference payloads, item payloads, and full results are never logged.
 ## Future Read API adapter boundary
 
 When the Targeted Read API lands, add a thin adapter (suggested:
-`app/recommendations/adapters.py` or inside the API layer) that maps read
+`api/src/platewise_api/recommendations/adapters.py` or inside the API layer) that maps read
 models onto `RecommendationItem` — choosing nutrition via the existing
 `display_nutrition()` precedence, mapping allergen declarations and dietary
 tags with their provenance, and setting the `*_data_complete` flags only when

@@ -1,7 +1,7 @@
 # Supported Units & Unsupported-Quantity Behavior
 
 How the importer converts recipe ingredient quantities to grams
-(`app/imports/recipes/units.py`), and what it does when it cannot. All factors
+(`api/src/platewise_api/imports/recipes/units.py`), and what it does when it cannot. All factors
 are exact `Decimal`.
 
 ## Mass units → grams (direct conversion)

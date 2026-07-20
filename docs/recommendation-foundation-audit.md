@@ -13,8 +13,8 @@ Read API is being built separately; this milestone must not depend on it.
 
 ## 1. Confirmed relevant model concepts (facts from code)
 
-- **Catalog vs offering split** (`app/db/models/catalog.py`,
-  `app/db/models/menu.py`): `MenuItem` is the persistent food record;
+- **Catalog vs offering split** (`db/src/platewise_db/models/catalog.py`,
+  `db/src/platewise_db/models/menu.py`): `MenuItem` is the persistent food record;
   `MenuOffering` places it at a station/date/meal period with an
   `official_status` (`OfferingStatus`).
 - **Nutrition** (`NutritionFacts`): versioned; source-provided and
@@ -44,19 +44,19 @@ Read API is being built separately; this milestone must not depend on it.
 Pure, ORM-free, source-neutral modules that this milestone can import without
 touching FastAPI, the database, or the Read API:
 
-- `app/db/enums.py` — `StrEnum`s: `AllergenDeclarationType`,
+- `db/src/platewise_db/enums.py` — `StrEnum`s: `AllergenDeclarationType`,
   `NutritionProvenance`, `NutritionReviewStatus`, `CalculationStatus`,
   `OfferingStatus`, `ProvenanceSourceType`. (The module imports SQLAlchemy's
   `Enum` type only for column helpers; using the enums requires no DB.)
-- `app/imports/contracts.py` — Pydantic v2 conventions: frozen `_Contract`
+- `api/src/platewise_api/imports/contracts.py` — Pydantic v2 conventions: frozen `_Contract`
   base (`extra="forbid", frozen=True`), bounded `Annotated` Decimal types
   (`NutrientDecimal`, `ServingDecimal`) with `allow_inf_nan=False` and
   SQL-compatible maxima, and `NutrientValues` (the 9 tracked nutrients, all
   optional, never coerced to zero).
-- `app/imports/enums.py` — `NUTRIENT_FIELDS` (stable 9-nutrient ordering).
-- `app/imports/decimal_utils.py` — `ROUND_HALF_UP` policy, `to_decimal`,
+- `db/src/platewise_db/constants.py` — `NUTRIENT_FIELDS` (stable 9-nutrient ordering).
+- `db/src/platewise_db/decimal_utils.py` — `ROUND_HALF_UP` policy, `to_decimal`,
   `quantize_nutrient` (2 dp).
-- `app/imports/normalizers.py` — `normalize_name` (lowercase, whitespace
+- `db/src/platewise_db/normalizers.py` — `normalize_name` (lowercase, whitespace
   collapse) used for all normalized-name matching.
 
 ## 3. Nutrition/provenance behavior that must be preserved (facts from code)
@@ -94,7 +94,7 @@ touching FastAPI, the database, or the Read API:
 
 ## 6. Proposed standalone domain contracts (safe implementation choices)
 
-New package `app/recommendations/` (mirrors `app/imports/` structure), pure
+New package `api/src/platewise_api/recommendations/` (mirrors `api/src/platewise_api/imports/` structure), pure
 domain, no FastAPI/ORM/Read-API imports. Contracts follow the `_Contract`
 convention (Pydantic v2, frozen, `extra="forbid"`), all numerics `Decimal`.
 
@@ -191,28 +191,28 @@ regression: app import, `configure_mappers()`, OpenAPI generation.
 ## 11. Proposed file layout (matches prompt sketch + repo convention)
 
 ```text
-apps/api/app/recommendations/__init__.py
-apps/api/app/recommendations/contracts.py     # item/preference/result contracts
-apps/api/app/recommendations/enums.py         # GoalType, SafetyMode, reason/warning codes
-apps/api/app/recommendations/exceptions.py    # RecommendationError, DuplicateItemIdError
-apps/api/app/recommendations/filters.py       # hard eligibility filtering
-apps/api/app/recommendations/scoring.py       # weights, references, components, confidence
-apps/api/app/recommendations/explanations.py  # stable human-readable text
-apps/api/app/recommendations/plates.py        # basic deterministic plate assembly
-apps/api/app/recommendations/service.py       # orchestration + logging
-apps/api/tests/recommendation_fixtures.py
-apps/api/tests/test_recommendation_contracts.py
-apps/api/tests/test_recommendation_filters.py
-apps/api/tests/test_recommendation_scoring.py
-apps/api/tests/test_recommendation_ranking.py
-apps/api/tests/test_recommendation_explanations.py
-apps/api/tests/test_recommendation_service.py
+api/src/platewise_api/recommendations/__init__.py
+api/src/platewise_api/recommendations/contracts.py     # item/preference/result contracts
+api/src/platewise_api/recommendations/enums.py         # GoalType, SafetyMode, reason/warning codes
+api/src/platewise_api/recommendations/exceptions.py    # RecommendationError, DuplicateItemIdError
+api/src/platewise_api/recommendations/filters.py       # hard eligibility filtering
+api/src/platewise_api/recommendations/scoring.py       # weights, references, components, confidence
+api/src/platewise_api/recommendations/explanations.py  # stable human-readable text
+api/src/platewise_api/recommendations/plates.py        # basic deterministic plate assembly
+api/src/platewise_api/recommendations/service.py       # orchestration + logging
+api/tests/recommendation_fixtures.py
+api/tests/test_recommendation_contracts.py
+api/tests/test_recommendation_filters.py
+api/tests/test_recommendation_scoring.py
+api/tests/test_recommendation_ranking.py
+api/tests/test_recommendation_explanations.py
+api/tests/test_recommendation_service.py
 docs/recommendation-foundation-architecture.md
 logs/MVP/recommendation-foundation/LOG.md
 ```
 
 `enums.py`, `exceptions.py`, and a fixtures module are additions to the
-prompt's sketch, mirroring the existing `app/imports/` package shape.
+prompt's sketch, mirroring the existing `api/src/platewise_api/imports/` package shape.
 
 ## 12. Unresolved product decisions (owner input welcome; safe defaults chosen)
 

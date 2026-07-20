@@ -2,17 +2,41 @@
 
 ## Current foundation
 
-PlateWise is a small monorepo with separately deployable web and API applications backed by
-PostgreSQL. Docker Compose provides a reproducible development environment without forcing either
-developer to install matching language runtimes or databases locally.
+PlateWise is a small monorepo with three client/backend applications backed by PostgreSQL:
+a student-facing web app, a dining-hall staff desktop app, and a shared API. Docker Compose
+provides a reproducible development environment for the user, API, and database services without
+forcing either developer to install matching language runtimes or databases locally; the desktop
+app runs on the host.
 
 ```text
-Browser -> Next.js web -> FastAPI API -> PostgreSQL
+Browser        -> Next.js user (apps/user)  -> FastAPI API (api) -> platewise_db -> PostgreSQL
+Desktop window -> Tauri admin (apps/admin) -> FastAPI API (api) -> platewise_db -> PostgreSQL
 ```
 
-The frontend performs a server-side typed status request to the API. The API exposes versioned
-routes and owns database access. This boundary makes it possible for a later mobile client to reuse
-the same API without coupling nutrition logic to the website.
+The web frontend performs a server-side typed status request to the API. The API exposes versioned
+routes and owns database access. This boundary makes it possible for any client — the student web
+app, the admin desktop app, or a later mobile client — to reuse the same API without coupling
+nutrition logic to a particular frontend.
+
+## Client applications
+
+- **`apps/user` — student web app.** Next.js, mobile-first, served in the browser.
+- **`apps/admin` — staff desktop app.** Tauri 2 + React + TypeScript, desktop-first, distributed
+  as a native application. It exists as a separate application (not routes inside `apps/user`)
+  because dining-hall staff have materially different interaction patterns, security requirements,
+  deployment considerations, and future native capabilities from students. As of the current
+  milestone it is an application-shell foundation only: no API integration, authentication, or
+  catalog features yet.
+
+The repository has four explicit ownership boundaries:
+
+1. **`apps/user` and `apps/admin` are clients only.** `apps/` contains no backend or persistence
+   implementation.
+2. **`api` is the single backend.** It owns HTTP routes, configuration, API schemas, import
+   orchestration, and recommendation logic.
+3. **`db` owns persistence.** The `platewise_db` package owns SQLAlchemy models, sessions,
+   repositories, and Alembic migrations. `platewise_api` depends on it explicitly.
+4. **No client accesses PostgreSQL directly.** Both clients communicate only with the API.
 
 ## Stack choices
 
