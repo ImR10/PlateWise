@@ -32,8 +32,8 @@ recommendation**.
 - **Area:** behavioral edge cases; security and data integrity
 - **Severity:** high
 - **Type:** verified defect
-- **File / symbol:** `apps/api/app/imports/contracts.py` — numeric DTO fields;
-  `apps/api/app/imports/nutrition/provider.py` — provider numeric DTO fields
+- **File / symbol:** `api/src/platewise_api/imports/contracts.py` — numeric DTO fields;
+  `api/src/platewise_api/imports/nutrition/provider.py` — provider numeric DTO fields
 - **Verified behavior:** Pydantic accepts negative nutrient values, negative
   ingredient quantities, zero/negative portion weights, `NaN`, `Infinity`, and
   values whose precision exceeds the target SQL `Numeric` columns. Negative
@@ -53,8 +53,8 @@ recommendation**.
 - **Area:** security and data integrity; behavioral edge cases
 - **Severity:** high
 - **Type:** verified defect
-- **File / symbol:** `apps/api/app/imports/sources/fixture.py` —
-  `FixtureDiningSource.fetch`; `apps/api/app/imports/contracts.py` — DTOs
+- **File / symbol:** `api/src/platewise_api/imports/sources/fixture.py` —
+  `FixtureDiningSource.fetch`; `api/src/platewise_api/imports/contracts.py` — DTOs
 - **Verified behavior:** a non-list `menu_items` value is iterated as an arbitrary
   iterable, and raw payload depth/serialized size, record counts, recipe line
   counts, and source strings have no application limits.
@@ -74,8 +74,8 @@ recommendation**.
 - **Area:** security and data integrity; behavioral edge cases
 - **Severity:** high
 - **Type:** verified defect
-- **File / symbol:** `apps/api/app/imports/sources/fixture.py` —
-  `FixtureDiningSource.fetch`; `apps/api/app/imports/service.py` — `run_import`
+- **File / symbol:** `api/src/platewise_api/imports/sources/fixture.py` —
+  `FixtureDiningSource.fetch`; `api/src/platewise_api/imports/service.py` — `run_import`
 - **Verified behavior:** hierarchy and item records may declare a
   `source_system` different from the payload institution, and duplicate
   `(source_system, external_id)` menu items in one payload are processed
@@ -95,7 +95,7 @@ recommendation**.
 - **Area:** behavioral edge cases; data integrity
 - **Severity:** medium
 - **Type:** verified defect
-- **File / symbol:** `apps/api/app/imports/repositories.py` —
+- **File / symbol:** `db/src/platewise_db/repositories/imports.py` —
   `recipe_content_hash`
 - **Verified behavior:** `ImportedRecipe.source_text` is persisted but omitted
   from the recipe content hash. A changed original recipe body with unchanged
@@ -112,7 +112,7 @@ recommendation**.
 - **Area:** behavioral edge cases; observability
 - **Severity:** medium
 - **Type:** verified defect
-- **File / symbol:** `apps/api/app/imports/service.py` — `_process_item`
+- **File / symbol:** `api/src/platewise_api/imports/service.py` — `_process_item`
 - **Verified behavior:** source-versus-calculated calorie comparison runs only
   when a recipe version is newly created. If the recipe is unchanged and the
   source-provided calories change materially, no discrepancy warning is stored.
@@ -130,7 +130,7 @@ recommendation**.
 - **Area:** observability
 - **Severity:** medium
 - **Type:** verified defect
-- **File / symbol:** `apps/api/app/imports/service.py` — `run_import`,
+- **File / symbol:** `api/src/platewise_api/imports/service.py` — `run_import`,
   `_process_item`
 - **Verified behavior:** the importer writes database error rows but emits no
   Python log records for run start/completion/failure, counters, stage, duration,
@@ -149,8 +149,8 @@ recommendation**.
 - **Area:** performance
 - **Severity:** medium
 - **Type:** optimization opportunity
-- **File / symbol:** `apps/api/app/imports/service.py` — `_process_item`;
-  `apps/api/app/imports/recipes/resolver.py` — `_resolve_food`
+- **File / symbol:** `api/src/platewise_api/imports/service.py` — `_process_item`;
+  `api/src/platewise_api/imports/recipes/resolver.py` — `_resolve_food`
 - **Verified behavior:** every ingredient line calls `get_food` or `search_food`
   independently, even for the same deterministic provider identity/query within
   one import run.
@@ -167,7 +167,7 @@ recommendation**.
 - **Area:** performance; data integrity
 - **Severity:** medium
 - **Type:** maintainability concern and optimization opportunity
-- **File / symbol:** `apps/api/app/imports/repositories.py` —
+- **File / symbol:** `db/src/platewise_db/repositories/imports.py` —
   `upsert_provider_food`, `_provider_food_pk`, `persist_recipe_ingredients`
 - **Verified behavior:** each resolved line queries `provider_foods` during
   upsert and again to obtain its PK; an existing provider food is never refreshed
@@ -188,7 +188,7 @@ recommendation**.
 - **Area:** API and internal ergonomics; code quality
 - **Severity:** low
 - **Type:** maintainability concern
-- **File / symbol:** `apps/api/app/imports/service.py` — `_Counters`, `ImportResult`
+- **File / symbol:** `api/src/platewise_api/imports/service.py` — `_Counters`, `ImportResult`
 - **Verified behavior:** the public `ImportResult.counters` annotation is a
   private `_Counters` dataclass, `import_id` is typed as `object`, and callers can
   mutate the returned summary.
@@ -204,7 +204,7 @@ recommendation**.
 - **Area:** security; observability
 - **Severity:** medium
 - **Type:** verified defect
-- **File / symbol:** `apps/api/app/imports/service.py` — exception handler and
+- **File / symbol:** `api/src/platewise_api/imports/service.py` — exception handler and
   unresolved-ingredient error creation
 - **Verified behavior:** arbitrary `str(exc)` is persisted as an import error and
   full source ingredient text is stored in `ingredient_context`; item names are
@@ -224,7 +224,7 @@ recommendation**.
 - **Area:** behavioral edge cases; transaction integrity
 - **Severity:** medium
 - **Type:** verified defect
-- **File / symbol:** `apps/api/app/imports/service.py` — `run_import(tolerant=False)`
+- **File / symbol:** `api/src/platewise_api/imports/service.py` — `run_import(tolerant=False)`
 - **Verified behavior:** on the first record persistence failure, the service
   marks the run failed and stops, but successful earlier record writes remain in
   the caller's transaction. This differs from the architecture's abort wording
@@ -243,8 +243,8 @@ recommendation**.
 - **Area:** observability; behavioral edge cases
 - **Severity:** low
 - **Type:** verified defect
-- **File / symbol:** `apps/api/app/imports/sources/base.py` — `FetchResult.warnings`;
-  `apps/api/app/imports/service.py` — `run_import`
+- **File / symbol:** `api/src/platewise_api/imports/sources/base.py` — `FetchResult.warnings`;
+  `api/src/platewise_api/imports/service.py` — `run_import`
 - **Verified behavior:** `FetchResult.warnings` is never consumed and an empty
   payload completes cleanly without a warning, even though documentation calls
   it suspicious.
@@ -261,8 +261,8 @@ recommendation**.
 - **Area:** security and data integrity
 - **Severity:** low
 - **Type:** optional recommendation
-- **File / symbol:** `apps/api/app/db/models/providers.py`,
-  `apps/api/app/db/models/recipes.py`, `apps/api/app/db/models/catalog.py`
+- **File / symbol:** `db/src/platewise_db/models/providers.py`,
+  `db/src/platewise_db/models/recipes.py`, `db/src/platewise_db/models/catalog.py`
 - **Verified behavior:** the database has identity and confidence constraints but
   no checks for positive provider reference/portion grams, non-negative recipe
   grams/quantities, or non-negative nutrition.
@@ -282,7 +282,7 @@ recommendation**.
 - **Area:** behavioral edge cases; API ergonomics
 - **Severity:** low
 - **Type:** optional recommendation
-- **File / symbol:** `apps/api/app/imports/nutrition/provider.py` —
+- **File / symbol:** `api/src/platewise_api/imports/nutrition/provider.py` —
   `IngredientNutritionProvider.search_food`
 - **Verified behavior:** the Protocol returns one food or `None`; multiple
   plausible matches cannot be represented. The fake silently overwrites

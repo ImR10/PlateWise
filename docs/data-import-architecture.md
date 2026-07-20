@@ -21,18 +21,15 @@ shapes, converging both into one normalized model:
 Guiding rule: *preserve source facts, calculate only from traceable inputs,
 expose uncertainty honestly, and never present invented values as authoritative.*
 
-## Package layout (`apps/api/app/imports/`)
+## Package layout (`api/src/platewise_api/imports/`)
 
 ```
 imports/
 ├── contracts.py        # source-neutral Pydantic DTOs (ImportPayload, ImportedMenuItem, ...)
-├── enums.py            # RecordClassification, NUTRIENT_FIELDS
+├── enums.py            # RecordClassification
 ├── exceptions.py       # typed pipeline errors
-├── decimal_utils.py    # Decimal precision + rounding policy
-├── normalizers.py      # name normalization + content hashing
 ├── classifiers.py      # nutrition_ready / recipe_ready / incomplete / invalid
 ├── provenance.py       # source-vs-calculated discrepancy detection
-├── repositories.py     # idempotent persistence (the only DB writer)
 ├── service.py          # orchestration + transaction boundary + run/error tracking
 ├── sources/
 │   ├── base.py         # DiningSource protocol, FetchResult, per-record parse results
@@ -46,6 +43,12 @@ imports/
     ├── resolver.py     # parsed line → provider food + grams + resolution status
     └── calculator.py   # Decimal aggregation → per-serving nutrition + status
 ```
+
+Persistence is owned separately by `db/src/platewise_db/`: `repositories/imports.py` is the only
+import writer, `constants.py` defines stored nutrient fields, and `decimal_utils.py` plus
+`normalizers.py` define persistence-boundary precision and identity policies. The DB package never
+imports `platewise_api`; repository inputs use the API's validated DTOs through Python's structural
+attribute interface.
 
 ## Two boundaries, kept separate
 
@@ -213,9 +216,9 @@ Run against the dedicated `*_test` database (see [database.md](database.md)):
 
 ```bash
 export TEST_DATABASE_URL="postgresql+psycopg://platewise:platewise_dev_password@localhost:5432/platewise_test"
-pytest                      # full suite
-pytest tests/test_import_service.py   # importer end-to-end
-ruff check app alembic tests
+uv run pytest                              # API and service suite
+uv run pytest tests/test_import_service.py # importer end-to-end
+uv run ruff check src tests
 ```
 
 Fixtures live in `tests/import_fixtures.py` (the 10 plan fixtures + a

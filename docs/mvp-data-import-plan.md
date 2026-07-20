@@ -463,7 +463,7 @@ An empty or suspicious source response must never cause existing valid data to b
 Conceptual structure:
 
 ```text
-app/
+api/src/platewise_api/
 └── imports/
     ├── __init__.py
     ├── contracts.py
@@ -471,8 +471,6 @@ app/
     ├── exceptions.py
     ├── service.py
     ├── classifiers.py
-    ├── normalizers.py
-    ├── repositories.py
     ├── provenance.py
     ├── sources/
     │   ├── __init__.py
@@ -486,6 +484,11 @@ app/
         ├── provider.py
         └── normalizer.py
 ```
+
+The implemented repository boundary supersedes this original conceptual tree:
+normalization/precision utilities and the persistence repository live in
+`db/src/platewise_db/`, while orchestration and source adapters remain in
+`api/src/platewise_api/imports/`.
 
 Conceptual responsibilities:
 

@@ -52,7 +52,7 @@ Supporting principles baked into the schema:
 ## Package organization
 
 ```
-app/db/
+db/src/platewise_db/
 ├── base.py            # DeclarativeBase + shared MetaData (naming convention)
 ├── mixins.py          # UUID PK, timestamps, source-tracking column mixins
 ├── enums.py           # native PostgreSQL ENUM value sets + helpers
@@ -72,7 +72,7 @@ app/db/
 
 Cross-module relationships use string class names and string-based
 `ForeignKey("table.col")` targets, so there are no import cycles between model
-modules. `app/db/models/__init__.py` imports every module, which is enough for
+modules. `db/src/platewise_db/models/__init__.py` imports every module, which is enough for
 Alembic autogenerate and `Base.metadata.create_all` to see the whole schema.
 
 ### Conventions
@@ -85,7 +85,7 @@ Alembic autogenerate and `Base.metadata.create_all` to see the whole schema.
 - **Enums** are native PostgreSQL `ENUM` types (validated at the storage layer).
   The stored value is the lowercase string, not the Python member name.
 - **Constraint/index names** follow a deterministic naming convention
-  (`app/db/base.py`) so migrations are reproducible.
+  (`db/src/platewise_db/base.py`) so migrations are reproducible.
 
 ## Tables
 
@@ -229,7 +229,7 @@ Each `downgrade()` also drops the enum types it created (Alembic does not do thi
 automatically), so upgrade→downgrade→re-upgrade cycles are clean.
 
 ```bash
-# From apps/api, with DATABASE_URL pointing at your database:
+# From db, after `uv sync`, with DATABASE_URL pointing at your database:
 alembic upgrade head      # build the schema
 alembic downgrade base    # tear it down
 alembic check             # verify models and migration agree (no drift)
@@ -240,11 +240,11 @@ alembic check             # verify models and migration agree (no drift)
 Database tests run against a dedicated `<db>_test` database (derived from
 `DATABASE_URL`, or set `TEST_DATABASE_URL` explicitly). The schema is built by
 running the real migration, and each test executes inside a rolled-back
-transaction for isolation. Tests are skipped automatically if PostgreSQL is
-unreachable.
+transaction for isolation. An unreachable PostgreSQL instance fails the suite;
+database coverage is never silently skipped.
 
 ```bash
 # Postgres reachable on localhost:
 export DATABASE_URL="postgresql+psycopg://platewise:platewise_dev_password@localhost:5432/platewise"
-pytest
+uv run pytest
 ```

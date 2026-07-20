@@ -10,7 +10,7 @@ modified by this document.
 
 > **Update (Phase 2, 2026-07-18):** the audit was approved and implemented. The
 > recommended schema changes shipped in migration `20260718_0002` and the
-> importer in `app/imports/`. See
+> importer in `api/src/platewise_api/imports/`. See
 > [data-import-architecture.md](data-import-architecture.md),
 > [recipe-nutrition-calculation.md](recipe-nutrition-calculation.md),
 > [supported-units.md](supported-units.md), and
@@ -76,7 +76,7 @@ Decimal-precision policy.
 
 ## 2. Current database capabilities
 
-**[FACT]** Verified from `apps/api/app/db/models/` and the migration. All tables
+**[FACT]** Verified from `db/src/platewise_db/models/` and the migration. All tables
 have a UUID `id` PK (`gen_random_uuid()` default), `created_at`/`updated_at`
 (where the `TimestampMixin` is applied), and a deterministic naming convention.
 
@@ -310,7 +310,7 @@ per-100g nutrients, or supported portion→gram weights, exists.
   provenance instead of hard-coded density guesses.
 
 **[REC]** Application boundary — a `Protocol` (`IngredientNutritionProvider`) in
-`app/imports/nutrition/provider.py` with a deterministic **fake** implementation
+`api/src/platewise_api/imports/nutrition/provider.py` with a deterministic **fake** implementation
 for tests/fixtures. No real external provider is selected or integrated in this
 milestone (plan §"Explicitly Out of Scope"). **[DECISION]** sync vs async
 signature (§14-G).
@@ -346,7 +346,7 @@ JSON) and enum-vs-new-column for outcomes.
 
 ## 9. Transaction and safety analysis
 
-**[FACT]** `app/db/session.py` uses a **synchronous** engine + `sessionmaker`
+**[FACT]** `db/src/platewise_db/session.py` uses a **synchronous** engine + `sessionmaker`
 (`autoflush=False`, `expire_on_commit=False`); `get_db()` yields a session in a
 `with` block. No importer, sync-delete, or transaction helper exists yet, so
 there is currently **no destructive-sync path** in the codebase.
@@ -374,7 +374,7 @@ run. Enforce these safety invariants (and test them):
 
 ## 10. Recommended internal boundaries
 
-**[REC]** Follow the plan's package layout under `apps/api/app/imports/`, adapted
+**[REC]** Follow the plan's package layout under `api/src/platewise_api/imports/`, adapted
 to repo conventions (sync persistence, Pydantic v2 contracts, `Protocol`-based
 provider). Boundaries:
 
@@ -518,22 +518,22 @@ that is the intended plan of record (the task text references `PLAN.md`).
 
 ### Expected to CREATE
 
-- `apps/api/alembic/versions/20260718_0002_data_import_foundation.py` — migration.
-- `apps/api/app/db/models/recipes.py` — `RecipeVersion`, `RecipeIngredient`.
-- `apps/api/app/db/models/providers.py` — `ProviderFood`, `ProviderFoodPortion`.
-- `apps/api/app/db/models/import_errors.py` *(or fold into `imports.py`)*.
-- `apps/api/app/imports/__init__.py`, `contracts.py`, `enums.py`,
+- `db/alembic/versions/20260718_0002_data_import_foundation.py` — migration.
+- `db/src/platewise_db/models/recipes.py` — `RecipeVersion`, `RecipeIngredient`.
+- `db/src/platewise_db/models/providers.py` — `ProviderFood`, `ProviderFoodPortion`.
+- `db/src/platewise_db/models/import_errors.py` *(or fold into `imports.py`)*.
+- `api/src/platewise_api/imports/__init__.py`, `contracts.py`, `enums.py`,
   `exceptions.py`, `service.py`, `classifiers.py`, `normalizers.py`,
   `repositories.py`, `provenance.py`.
-- `apps/api/app/imports/sources/__init__.py`, `base.py` (+ one fixture adapter).
-- `apps/api/app/imports/recipes/parser.py`, `units.py`, `resolver.py`,
+- `api/src/platewise_api/imports/sources/__init__.py`, `base.py` (+ one fixture adapter).
+- `api/src/platewise_api/imports/recipes/parser.py`, `units.py`, `resolver.py`,
   `calculator.py`.
-- `apps/api/app/imports/nutrition/provider.py`, `normalizer.py`.
-- `apps/api/tests/imports/` — fixtures (the plan's 10 fixtures) + tests for
+- `api/src/platewise_api/imports/nutrition/provider.py`, `normalizer.py`.
+- `api/tests/imports/` — fixtures (the plan's 10 fixtures) + tests for
   classification, normalization, parsing, units, portion→grams, resolution,
   aggregation, per-serving, decimal/rounding, provenance, incomplete handling,
   error preservation, rollback, idempotency.
-- `apps/api/tests/factories.py` additions or a new `tests/imports/factories.py`.
+- `db/tests/factories.py` additions or an API-local importer fixture module.
 - `docs/data-import-architecture.md`, `docs/recipe-nutrition-calculation.md`,
   `docs/supported-units.md` (or consolidated sections).
 - `logs/MVP/data-import/LOG.md` — created in Phase 1 (audit entry), appended in
@@ -541,19 +541,19 @@ that is the intended plan of record (the task text references `PLAN.md`).
 
 ### Expected to MODIFY
 
-- `apps/api/app/db/models/catalog.py` — `nutrition_facts` provenance columns +
+- `db/src/platewise_db/models/catalog.py` — `nutrition_facts` provenance columns +
   active-row index change; possibly `menu_items` classification/status.
-- `apps/api/app/db/models/imports.py` — new counters, `requested_scope`, outcome.
-- `apps/api/app/db/models/__init__.py` — export new models.
-- `apps/api/app/db/enums.py` — new enums.
+- `db/src/platewise_db/models/imports.py` — new counters, `requested_scope`, outcome.
+- `db/src/platewise_db/models/__init__.py` — export new models.
+- `db/src/platewise_db/enums.py` — new enums.
 - Hierarchy/catalog models — add `source_system` (+ constraints) **if** §14-A.
 - `docs/database.md` — document new tables/columns.
-- `apps/api/pyproject.toml` — only if a runtime dependency (e.g., promoting
+- `api/pyproject.toml` — only if a runtime dependency (e.g., promoting
   `httpx`) or a type checker is approved.
-- `apps/api/tests/test_db_schema.py` — extend `EXPECTED_TABLES`/`EXPECTED_ENUMS`.
+- `db/tests/test_db_schema.py` — extend `EXPECTED_TABLES`/`EXPECTED_ENUMS`.
 
 ### Expected to LEAVE UNCHANGED
 
-- `app/main.py`, `app/api/*`, `app/schemas/health.py`, `app/core/config.py`
+- `api/src/platewise_api/main.py`, `api/src/platewise_api/api/*`, `api/src/platewise_api/schemas/health.py`, `api/src/platewise_api/core/config.py`
   (unless new env vars are introduced), `session.py` (unless async is chosen),
   and all existing passing tests (they must not be weakened to pass).
