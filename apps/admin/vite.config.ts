@@ -1,15 +1,13 @@
+import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 
-// Tauri expects a fixed dev-server port and manages its own terminal output.
+// PlateWise Admin is a standard browser-based single-page application.
 export default defineConfig({
-  plugins: [react()],
-  clearScreen: false,
+  plugins: [react(), tailwindcss()],
   server: {
     port: 1420,
-    strictPort: true,
   },
-  envPrefix: ["VITE_", "TAURI_ENV_"],
   test: {
     environment: "jsdom",
     globals: true,

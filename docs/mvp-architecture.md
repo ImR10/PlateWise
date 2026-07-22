@@ -19,7 +19,7 @@ flowchart TB
         ApiClient["Typed API client<br/>(OpenAPI-generated types)"]
     end
 
-    subgraph AdminApp [admin - Tauri 2 / React / TS desktop app]
+    subgraph AdminApp [admin - Vite / React / TS / Tailwind web app]
         AdminUI["Admin dashboard<br/>menu + food editing"]
     end
 
@@ -41,7 +41,7 @@ flowchart TB
     DB[("db - PostgreSQL 17")]
 
     Student -->|HTTPS| StudentUI
-    Admin -->|desktop app| AdminUI
+    Admin -->|HTTPS| AdminUI
     StudentUI --> LocalPrefs
     StudentUI --> ApiClient
     ApiClient -->|REST / JSON| Router
@@ -89,12 +89,13 @@ flowchart LR
 - **Single deployable backend** in `api/src/platewise_api`, with routes, schemas, importer
   orchestration, source adapters, and recommendations. Persistence is an explicit dependency in
   `db/src/platewise_db`; it is a package boundary, not another network service.
-- **Separate admin desktop client (updated 2026-07-20).** The dining-hall staff dashboard is a
-  separate Tauri 2 + React + TypeScript desktop application (`apps/admin`), not routes inside the
-  student web app; earlier revisions of this document that placed admin routes inside `web` are
-  superseded. `api` remains the single backend for both clients, `db` owns the persistence
-  package and migrations, and no client connects to PostgreSQL directly. The admin app runs on
-  the host and is not a Compose service.
+- **Separate admin website (updated 2026-07-22).** The dining-hall staff dashboard is a separate
+  browser-based Vite + React + TypeScript + Tailwind application (`apps/admin`), not routes inside
+  the student web app; earlier revisions that placed admin routes inside `web` are superseded, and
+  the interim Tauri 2 desktop packaging (2026-07-20) has been replaced by a standard web app. `api`
+  remains the single backend for both clients, `db` owns the persistence package and migrations, and
+  no client connects to PostgreSQL directly. The admin app runs on the host and is not a Compose
+  service.
 - **Admin dashboard is the authorized data source** for the MVP; writes flow through the same
   FastAPI service into raw snapshots, then idempotent normalized upserts (`(provider, external_id,
   service_date)` unique). Re-import of the same snapshot is a no-op.
