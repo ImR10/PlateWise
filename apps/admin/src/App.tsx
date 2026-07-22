@@ -1,8 +1,12 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 
 import { AdminLayout } from "./components/layout/AdminLayout";
 import { DashboardPage } from "./pages/DashboardPage";
+import { MenuEditorPage } from "./pages/MenuEditorPage";
+import { MenuPreviewPage } from "./pages/MenuPreviewPage";
+import { MenusPage } from "./pages/MenusPage";
 import { PlaceholderPage } from "./pages/PlaceholderPage";
+import { MenusProvider } from "./state/MenusProvider";
 
 export default function App() {
   return (
@@ -10,23 +14,25 @@ export default function App() {
       <Route element={<AdminLayout />}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<DashboardPage />} />
+        {/* Menus feature — shares an in-memory provider across its routes. */}
         <Route
-          path="/menus"
           element={
-            <PlaceholderPage
-              title="Menus"
-              icon="restaurant_menu"
-              description="Build, schedule, and publish dining-hall menus. This workspace arrives in a later milestone."
-            />
+            <MenusProvider>
+              <Outlet />
+            </MenusProvider>
           }
-        />
+        >
+          <Route path="/menus" element={<MenusPage />} />
+          <Route path="/menus/:menuId/edit" element={<MenuEditorPage />} />
+          <Route path="/menus/:menuId/preview" element={<MenuPreviewPage />} />
+        </Route>
         <Route
           path="/locations"
           element={
             <PlaceholderPage
               title="Dining Locations"
               icon="location_on"
-              description="Manage University of Georgia dining locations and their menu readiness. Coming in a later milestone."
+              description="Manage Sample University dining locations and their menu readiness. Coming in a later milestone."
             />
           }
         />

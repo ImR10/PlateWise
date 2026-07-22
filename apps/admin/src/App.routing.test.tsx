@@ -21,8 +21,8 @@ describe("Routing", () => {
     ).toBeInTheDocument();
   });
 
+  // /menus is now a fully implemented feature; the rest remain placeholders.
   it.each([
-    ["/menus", "Menus"],
     ["/locations", "Dining Locations"],
     ["/foods", "Food Catalog"],
     ["/activity", "Activity"],

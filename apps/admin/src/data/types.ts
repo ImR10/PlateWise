@@ -32,7 +32,7 @@ export interface AttentionItem {
   action: "Fix" | "Review";
 }
 
-/** A University of Georgia dining location and its menu readiness. */
+/** A Sample University dining location and its menu readiness. */
 export interface DiningLocation {
   id: string;
   name: string;

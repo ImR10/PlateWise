@@ -1,14 +1,14 @@
 /**
- * Local mock data for the PlateWise Admin dashboard (University of Georgia).
+ * Local mock data for the PlateWise Admin dashboard (Sample University).
  *
  * This is the single data boundary for the dashboard milestone. Every value
  * the UI shows lives here rather than being scattered through JSX, so it can
  * later be swapped for API calls (e.g. a `useDashboard()` hook backed by the
  * shared FastAPI service) without touching the presentational components.
  *
- * Scope note: PlateWise Admin manages one university. Only University of
- * Georgia dining locations appear here — no other institutions, and no
- * platform-wide or multi-university data.
+ * Scope note: PlateWise Admin manages one university. Only Sample University
+ * dining locations appear here — all names are generic placeholders, with no
+ * other institutions and no platform-wide or multi-university data.
  */
 import type {
   ActivityEntry,
@@ -23,8 +23,8 @@ import type {
 } from "./types";
 
 export const institution: Institution = {
-  name: "University of Georgia",
-  shortCode: "UGA",
+  name: "Sample University",
+  shortCode: "SU",
 };
 
 export const staffProfile: StaffProfile = {
@@ -83,17 +83,17 @@ export const todaySummary: TodaySummary = {
 
 export const attentionItems: AttentionItem[] = [
   {
-    id: "chicken-alfredo-allergens",
+    id: "menu-item-01-allergens",
     label: "Missing Allergy Info",
-    detail: "Chicken Alfredo • Bolton",
+    detail: "Menu Item 01 • Dining Hall A",
     icon: "error",
     tone: "danger",
     action: "Fix",
   },
   {
-    id: "bolton-dinner-unpublished",
+    id: "hall-a-dinner-unpublished",
     label: "Menu Not Published",
-    detail: "Dinner • Bolton",
+    detail: "Dinner • Dining Hall A",
     icon: "warning",
     tone: "warning",
     action: "Review",
@@ -107,9 +107,9 @@ export const attentionItems: AttentionItem[] = [
     action: "Fix",
   },
   {
-    id: "village-summit-duplicate",
+    id: "hall-c-duplicate",
     label: "Duplicate Detected",
-    detail: "Village Summit",
+    detail: "Dining Hall C",
     icon: "content_copy",
     tone: "warning",
     action: "Review",
@@ -118,32 +118,32 @@ export const attentionItems: AttentionItem[] = [
 
 export const diningLocations: DiningLocation[] = [
   {
-    id: "bolton",
-    name: "Bolton Dining Commons",
+    id: "loc-a",
+    name: "Dining Hall A",
     statusLabel: "1 issue",
     tone: "danger",
     lastUpdated: "10m ago",
     readiness: "Draft",
   },
   {
-    id: "snelling",
-    name: "Snelling Dining Commons",
+    id: "loc-b",
+    name: "Dining Hall B",
     statusLabel: "Clean",
     tone: "success",
     lastUpdated: "2h ago",
     readiness: "Published",
   },
   {
-    id: "village-summit",
-    name: "Village Summit",
+    id: "loc-c",
+    name: "Dining Hall C",
     statusLabel: "2 issues",
     tone: "warning",
     lastUpdated: "45m ago",
     readiness: "In Review",
   },
   {
-    id: "oglethorpe",
-    name: "Oglethorpe Dining Commons",
+    id: "loc-d",
+    name: "Dining Hall D",
     statusLabel: "Clean",
     tone: "success",
     lastUpdated: "5h ago",
@@ -187,21 +187,21 @@ export const recentActivity: ActivityEntry[] = [
     id: "act-1",
     initials: "JD",
     actor: "John Doe",
-    description: "updated Chicken Alfredo",
+    description: "updated Menu Item 01",
     timestamp: "34 minutes ago",
   },
   {
     id: "act-2",
     initials: "JD",
     actor: "Jane Doe",
-    description: "published Bolton lunch menu",
+    description: "published Dining Hall A lunch menu",
     timestamp: "2 hours ago",
   },
   {
     id: "act-3",
     initials: "SY",
     actor: "System",
-    description: "flagged duplicate entry at Village Summit",
+    description: "flagged duplicate entry at Dining Hall C",
     timestamp: "Yesterday at 4:12 PM",
   },
   {

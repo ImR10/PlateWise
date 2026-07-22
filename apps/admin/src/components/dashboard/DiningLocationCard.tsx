@@ -4,7 +4,7 @@ import type { DiningLocation } from "../../data/types";
 import { Icon } from "../ui/Icon";
 import { StatusBadge } from "../ui/StatusBadge";
 
-/** A University of Georgia dining location summary card. */
+/** A Sample University dining location summary card. */
 export function DiningLocationCard({ location }: { location: DiningLocation }) {
   return (
     <Link

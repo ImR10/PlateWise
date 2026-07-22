@@ -5,26 +5,24 @@ import App from "./App";
 import { renderWithRouter } from "./test/renderWithRouter";
 
 describe("Dashboard content", () => {
-  it("shows the University of Georgia identity", () => {
+  it("shows the Sample University identity", () => {
     renderWithRouter(<App />);
 
     expect(
       screen.getByRole("heading", { name: "PlateWise Admin" }),
     ).toBeInTheDocument();
     // Appears in the sidebar subtitle and the header university badge.
-    expect(screen.getAllByText("University of Georgia").length).toBeGreaterThan(
-      0,
-    );
+    expect(screen.getAllByText("Sample University").length).toBeGreaterThan(0);
   });
 
-  it("does not reference any other university", () => {
+  it("renders the single generic institution badge", () => {
     renderWithRouter(<App />);
 
-    expect(screen.queryByText(/Georgia Tech/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Emory/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Georgia State/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Georgia Southern/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Kennesaw/i)).not.toBeInTheDocument();
+    // The header badge shows the institution short code and no other institution.
+    expect(screen.getByText("SU")).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", { name: "Sample University" }),
+    ).toBeInTheDocument();
   });
 
   it("renders the prominent 'Are today's menus ready?' heading", () => {
@@ -55,20 +53,20 @@ describe("Dashboard content", () => {
     expect(screen.getByText("Duplicate Detected")).toBeInTheDocument();
   });
 
-  it("renders exactly the four UGA dining locations", () => {
+  it("renders exactly the four Sample University dining locations", () => {
     renderWithRouter(<App />);
 
     expect(
-      screen.getByRole("link", { name: /Bolton Dining Commons/ }),
+      screen.getByRole("link", { name: /Dining Hall A/ }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /Snelling Dining Commons/ }),
+      screen.getByRole("link", { name: /Dining Hall B/ }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /Village Summit/ }),
+      screen.getByRole("link", { name: /Dining Hall C/ }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /Oglethorpe Dining Commons/ }),
+      screen.getByRole("link", { name: /Dining Hall D/ }),
     ).toBeInTheDocument();
   });
 
@@ -119,6 +117,6 @@ describe("Dashboard content", () => {
     expect(screen.getByText("Tomorrow (Wed)")).toBeInTheDocument();
     // "John Doe" appears in both the sidebar profile and the activity feed.
     expect(screen.getAllByText("John Doe").length).toBeGreaterThan(0);
-    expect(screen.getByText(/updated Chicken Alfredo/)).toBeInTheDocument();
+    expect(screen.getByText(/updated Menu Item 01/)).toBeInTheDocument();
   });
 });

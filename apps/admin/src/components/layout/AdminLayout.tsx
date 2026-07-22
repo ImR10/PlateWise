@@ -28,7 +28,15 @@ export function AdminLayout() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [isSidebarOpen]);
 
-  const activeNav = navItems.find((item) => item.path === location.pathname);
+  // Match the current path to a nav item, including nested routes such as
+  // /menus/:id/edit. Prefer the longest matching base path.
+  const activeNav = [...navItems]
+    .filter(
+      (item) =>
+        location.pathname === item.path ||
+        location.pathname.startsWith(`${item.path}/`),
+    )
+    .sort((a, b) => b.path.length - a.path.length)[0];
   const pageTitle = activeNav?.label ?? "Dashboard";
 
   return (

@@ -152,10 +152,27 @@ pnpm admin:typecheck       # TypeScript
 pnpm admin:build           # type-check + production build
 ```
 
-The current milestone ships the University of Georgia admin dashboard against typed local mock data:
-today's menu readiness, needs-attention items, dining locations, upcoming menus, recent activity,
-and quick actions, plus placeholder routes for the remaining sections. There is no API integration,
-authentication, or real menu/food editing yet.
+The dashboard ships the University of Georgia admin overview against typed local mock data: today's
+menu readiness, needs-attention items, dining locations, upcoming menus, recent activity, and quick
+actions.
+
+### Menus (frontend-only)
+
+The **Menus** section (`/menus`, `/menus/:menuId/edit`, `/menus/:menuId/preview`) is a
+frontend-only MVP:
+
+- All data is generic mock data (`Sample University`, `Dining Hall A`–`E`, `Menu Item NN`,
+  `Station A`–`E`, `John Doe`/`Jane Doe`/`System`) held in typed modules under
+  `apps/admin/src/data/`.
+- Edits — creating, duplicating, publishing, drafting, and deleting menus; editing stations and
+  items; publish validation; and preview — all run against **in-memory React state only**
+  (`apps/admin/src/state/MenusProvider.tsx`).
+- **Refreshing the browser resets all changes.** Nothing is saved.
+- There is no API, database, persistence, or authentication behind it. Backend integration is
+  intentionally deferred to a later milestone.
+
+The remaining sidebar routes (Dining Locations, Food Catalog, Activity, Settings) are intentional
+placeholders. There is no real menu/food persistence yet.
 
 ## Database migrations
 

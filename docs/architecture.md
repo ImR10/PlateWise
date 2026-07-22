@@ -25,8 +25,11 @@ nutrition logic to a particular frontend.
   browser-based single-page application. It exists as a separate application (not routes inside
   `apps/user`) because dining-hall staff have materially different interaction patterns, security
   requirements, and deployment considerations from students. As of the current milestone it ships
-  the University of Georgia admin dashboard against typed local mock data, with placeholder routes
-  for the remaining sections and no API integration, authentication, or catalog editing yet.
+  the University of Georgia admin dashboard and a frontend-only **Menus** section (overview, editor,
+  and preview) against typed local mock data. Menu edits live in in-memory React state only and are
+  reset on refresh; the remaining sections are placeholder routes. There is no API integration,
+  authentication, persistence, or catalog editing behind these screens yet — backend integration is
+  intentionally deferred.
 
 The repository has four explicit ownership boundaries:
 
