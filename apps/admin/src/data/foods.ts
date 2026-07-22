@@ -1,10 +1,11 @@
 /**
- * Generic reusable food-catalog mock data for the "Add Food Item" flow.
- * Item names are placeholders only (no real dishes, brands, or recipes).
+ * Initial in-memory managed food catalog (generic placeholders only — no real
+ * dishes, brands, or recipes). Seed for the FoodCatalog provider; edits live in
+ * React state for the session and reset on refresh.
  */
-import type { FoodCatalogItem } from "./menuTypes";
+import type { FoodCatalogItem } from "./foodTypes";
 
-export const foodCatalog: FoodCatalogItem[] = [
+export const initialFoodCatalog: FoodCatalogItem[] = [
   {
     id: "cat-01",
     name: "Menu Item 01",
@@ -12,6 +13,13 @@ export const foodCatalog: FoodCatalogItem[] = [
     dietaryTags: ["Vegetarian"],
     allergens: ["Milk", "Wheat"],
     description: "Generic placeholder catalog item.",
+    status: "active",
+    studentVisible: true,
+    defaultAvailability: "available",
+    servingLabel: "1 serving",
+    calories: "320",
+    updatedAt: "2h ago",
+    updatedBy: "Jane Doe",
   },
   {
     id: "cat-02",
@@ -20,6 +28,13 @@ export const foodCatalog: FoodCatalogItem[] = [
     dietaryTags: ["Vegan", "Gluten-Free"],
     allergens: ["Soy"],
     description: "Generic placeholder catalog item.",
+    status: "active",
+    studentVisible: true,
+    defaultAvailability: "available",
+    servingLabel: "1 bowl",
+    calories: "280",
+    updatedAt: "3h ago",
+    updatedBy: "John Doe",
   },
   {
     id: "cat-03",
@@ -28,6 +43,12 @@ export const foodCatalog: FoodCatalogItem[] = [
     dietaryTags: ["Halal"],
     allergens: ["Eggs"],
     description: "Generic placeholder catalog item.",
+    status: "active",
+    studentVisible: true,
+    defaultAvailability: "limited",
+    servingLabel: "1 plate",
+    updatedAt: "1d ago",
+    updatedBy: "John Doe",
   },
   {
     id: "cat-04",
@@ -36,6 +57,11 @@ export const foodCatalog: FoodCatalogItem[] = [
     dietaryTags: ["Vegetarian", "Gluten-Free"],
     allergens: ["Tree Nuts"],
     description: "Generic placeholder catalog item.",
+    status: "active",
+    studentVisible: true,
+    defaultAvailability: "available",
+    updatedAt: "1d ago",
+    updatedBy: "Jane Doe",
   },
   {
     id: "cat-05",
@@ -44,6 +70,13 @@ export const foodCatalog: FoodCatalogItem[] = [
     dietaryTags: [],
     allergens: ["Fish"],
     description: "Generic placeholder catalog item.",
+    status: "active",
+    studentVisible: true,
+    defaultAvailability: "available",
+    servingLabel: "1 fillet",
+    calories: "410",
+    updatedAt: "2d ago",
+    updatedBy: "John Doe",
   },
   {
     id: "cat-06",
@@ -52,6 +85,11 @@ export const foodCatalog: FoodCatalogItem[] = [
     dietaryTags: ["Vegan"],
     allergens: ["Peanuts", "Sesame"],
     description: "Generic placeholder catalog item.",
+    status: "active",
+    studentVisible: true,
+    defaultAvailability: "available",
+    updatedAt: "2d ago",
+    updatedBy: "Jane Doe",
   },
   {
     id: "cat-07",
@@ -60,6 +98,11 @@ export const foodCatalog: FoodCatalogItem[] = [
     dietaryTags: ["Vegetarian"],
     allergens: ["Milk"],
     description: "Generic placeholder catalog item.",
+    status: "active",
+    studentVisible: true,
+    defaultAvailability: "available",
+    updatedAt: "3d ago",
+    updatedBy: "John Doe",
   },
   {
     id: "cat-08",
@@ -68,14 +111,24 @@ export const foodCatalog: FoodCatalogItem[] = [
     dietaryTags: ["Halal", "Gluten-Free"],
     allergens: ["Shellfish"],
     description: "Generic placeholder catalog item.",
+    status: "active",
+    studentVisible: true,
+    defaultAvailability: "limited",
+    updatedAt: "3d ago",
+    updatedBy: "Jane Doe",
   },
   {
     id: "cat-09",
     name: "Menu Item 09",
     category: "Category A",
-    dietaryTags: ["Vegan"],
+    dietaryTags: ["Vegan", "Plant-Based"],
     allergens: [],
     description: "Generic placeholder catalog item.",
+    status: "active",
+    studentVisible: true,
+    defaultAvailability: "available",
+    updatedAt: "4d ago",
+    updatedBy: "John Doe",
   },
   {
     id: "cat-10",
@@ -84,14 +137,25 @@ export const foodCatalog: FoodCatalogItem[] = [
     dietaryTags: ["Vegetarian"],
     allergens: ["Wheat", "Soy"],
     description: "Generic placeholder catalog item.",
+    status: "draft",
+    studentVisible: false,
+    defaultAvailability: "available",
+    internalNotes: "Awaiting allergen review.",
+    updatedAt: "5d ago",
+    updatedBy: "John Doe",
   },
   {
     id: "cat-11",
     name: "Menu Item 11",
     category: "Category C",
-    dietaryTags: ["Gluten-Free"],
+    dietaryTags: ["Gluten-Free", "Kosher"],
     allergens: ["Eggs", "Milk"],
     description: "Generic placeholder catalog item.",
+    status: "archived",
+    studentVisible: false,
+    defaultAvailability: "unavailable",
+    updatedAt: "1w ago",
+    updatedBy: "System",
   },
   {
     id: "cat-12",
@@ -100,5 +164,10 @@ export const foodCatalog: FoodCatalogItem[] = [
     dietaryTags: ["Halal"],
     allergens: ["Tree Nuts", "Peanuts"],
     description: "Generic placeholder catalog item.",
+    status: "active",
+    studentVisible: true,
+    defaultAvailability: "available",
+    updatedAt: "1w ago",
+    updatedBy: "Jane Doe",
   },
 ];

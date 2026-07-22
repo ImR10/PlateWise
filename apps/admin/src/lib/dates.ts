@@ -39,3 +39,17 @@ export const formatShortDate = (iso: string): string =>
 
 export const dayNumber = (iso: string): string =>
   String(fromIso(iso).getDate());
+
+/** Lowercase weekday key ("monday"…"sunday") for an ISO date. */
+export const isoWeekdayKey = (iso: string): string => {
+  const keys = [
+    "sunday",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+  ];
+  return keys[fromIso(iso).getDay()];
+};

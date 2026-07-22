@@ -14,9 +14,9 @@ import { Button } from "../components/ui/Button";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { Icon } from "../components/ui/Icon";
 import { LiveRegion } from "../components/ui/LiveRegion";
-import { diningLocationName } from "../data/locations";
 import { mealPeriodLabel, type Menu } from "../data/menuTypes";
 import { TODAY_ISO, addDaysIso, formatDisplayDate } from "../lib/dates";
+import { useDiningLocations } from "../state/DiningLocationsProvider";
 import { useMenus } from "../state/MenusProvider";
 import { validateMenuForPublish } from "../state/menuValidation";
 
@@ -24,6 +24,7 @@ export function MenusPage() {
   const navigate = useNavigate();
   const { menus, createMenu, duplicateMenu, deleteMenu, setStatus } =
     useMenus();
+  const { getLocationName } = useDiningLocations();
 
   const [selectedDate, setSelectedDate] = useState(TODAY_ISO);
   const [filters, setFilters] = useState<MenuFilterState>(emptyFilters);
@@ -68,7 +69,7 @@ export function MenusPage() {
     const copy = duplicateMenu(menu.id);
     if (copy) {
       setMessage(
-        `Duplicated ${diningLocationName(menu.locationId)} ${mealPeriodLabel(
+        `Duplicated ${getLocationName(menu.locationId)} ${mealPeriodLabel(
           menu.mealPeriod,
         )} menu for this session.`,
       );
@@ -245,7 +246,7 @@ export function MenusPage() {
         title="Delete menu?"
         message={
           pendingDelete
-            ? `This removes the ${diningLocationName(
+            ? `This removes the ${getLocationName(
                 pendingDelete.locationId,
               )} ${mealPeriodLabel(
                 pendingDelete.mealPeriod,

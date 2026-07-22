@@ -1,4 +1,3 @@
-import { diningLocationName } from "../../data/locations";
 import {
   mealPeriodLabel,
   menuStatusLabel,
@@ -6,6 +5,7 @@ import {
   type Menu,
 } from "../../data/menuTypes";
 import { formatShortDate } from "../../lib/dates";
+import { useDiningLocations } from "../../state/DiningLocationsProvider";
 import { validateMenuForPublish } from "../../state/menuValidation";
 import { Button } from "../ui/Button";
 import { Icon } from "../ui/Icon";
@@ -30,7 +30,8 @@ export function MenuCard({
   onPublish,
   onDelete,
 }: MenuCardProps) {
-  const locationName = diningLocationName(menu.locationId);
+  const { getLocationName } = useDiningLocations();
+  const locationName = getLocationName(menu.locationId);
   const mealLabel = mealPeriodLabel(menu.mealPeriod);
   const descriptor = `${locationName} ${mealLabel}`;
   const stationCount = menu.stations.length;

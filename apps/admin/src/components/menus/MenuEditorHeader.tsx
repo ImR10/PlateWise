@@ -1,4 +1,3 @@
-import { diningLocationName } from "../../data/locations";
 import {
   mealPeriodLabel,
   menuStatusLabel,
@@ -6,6 +5,7 @@ import {
   type Menu,
 } from "../../data/menuTypes";
 import { formatShortDate } from "../../lib/dates";
+import { useDiningLocations } from "../../state/DiningLocationsProvider";
 import { Button } from "../ui/Button";
 import { Icon } from "../ui/Icon";
 import { StatusBadge } from "../ui/StatusBadge";
@@ -27,6 +27,7 @@ export function MenuEditorHeader({
   onSaveDraft,
   onPublish,
 }: MenuEditorHeaderProps) {
+  const { getLocationName } = useDiningLocations();
   return (
     <div className="space-y-3">
       <button
@@ -42,7 +43,7 @@ export function MenuEditorHeader({
         <div className="flex flex-wrap items-center gap-3">
           <div>
             <h2 className="font-h2 text-h2">
-              {diningLocationName(menu.locationId)}
+              {getLocationName(menu.locationId)}
             </h2>
             <p className="text-body-sm text-secondary">
               {mealPeriodLabel(menu.mealPeriod)} • {formatShortDate(menu.date)}

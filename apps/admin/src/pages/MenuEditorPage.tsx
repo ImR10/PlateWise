@@ -9,13 +9,13 @@ import { MenuValidationSummary } from "../components/menus/MenuValidationSummary
 import { Button } from "../components/ui/Button";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { LiveRegion } from "../components/ui/LiveRegion";
-import { diningLocations } from "../data/locations";
 import {
   MEAL_PERIODS,
   type MealPeriod,
   type MenuStation,
   type MenuValidationIssue,
 } from "../data/menuTypes";
+import { useDiningLocations } from "../state/DiningLocationsProvider";
 import { useMenus } from "../state/MenusProvider";
 import { validateMenuForPublish } from "../state/menuValidation";
 
@@ -27,6 +27,7 @@ export function MenuEditorPage() {
   const { menuId } = useParams();
   const navigate = useNavigate();
   const menus = useMenus();
+  const { selectableLocations, getLocation } = useDiningLocations();
   const menu = menuId ? menus.getMenu(menuId) : undefined;
 
   const [dirty, setDirty] = useState(false);
@@ -61,6 +62,15 @@ export function MenuEditorPage() {
   };
 
   const stationOptions = menu.stations.map((s) => ({ id: s.id, name: s.name }));
+
+  // Offer active/draft locations, plus the menu's current one if it is no
+  // longer selectable (e.g. it was later archived), so it stays valid.
+  const currentLocation = getLocation(menu.locationId);
+  const locationOptions =
+    currentLocation &&
+    !selectableLocations.some((l) => l.id === currentLocation.id)
+      ? [currentLocation, ...selectableLocations]
+      : selectableLocations;
 
   const goBack = () => {
     if (dirty) setLeaveOpen(true);
@@ -127,7 +137,7 @@ export function MenuEditorPage() {
               }
             >
               <option value="">Select a location</option>
-              {diningLocations.map((loc) => (
+              {locationOptions.map((loc) => (
                 <option key={loc.id} value={loc.id}>
                   {loc.name}
                 </option>

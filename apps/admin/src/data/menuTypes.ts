@@ -25,7 +25,13 @@ export type FoodCategory =
   | "Category C"
   | "Category D";
 
-export type DietaryTag = "Vegetarian" | "Vegan" | "Gluten-Free" | "Halal";
+export type DietaryTag =
+  | "Vegetarian"
+  | "Vegan"
+  | "Gluten-Free"
+  | "Halal"
+  | "Kosher"
+  | "Plant-Based";
 
 export type Allergen =
   | "Milk"
@@ -41,20 +47,11 @@ export type Allergen =
 /** Who last touched a menu. Only generic placeholders / the System actor. */
 export type ActivityActor = "John Doe" | "Jane Doe" | "System";
 
-export interface DiningLocation {
-  id: string;
-  name: string;
-}
-
-/** An item in the reusable food catalog used by the "Add Food Item" flow. */
-export interface FoodCatalogItem {
-  id: string;
-  name: string;
-  category: FoodCategory;
-  dietaryTags: DietaryTag[];
-  allergens: Allergen[];
-  description?: string;
-}
+/**
+ * Note: the managed `DiningLocation` and `FoodCatalogItem` domain records live
+ * in `data/locationTypes.ts` and `data/foodTypes.ts`. They are supersets of the
+ * fields the Menus feature needs, so Menus consumes those managed records.
+ */
 
 /** A food item placed on a specific menu station. */
 export interface MenuItem {
@@ -138,6 +135,8 @@ export const DIETARY_TAGS: DietaryTag[] = [
   "Vegan",
   "Gluten-Free",
   "Halal",
+  "Kosher",
+  "Plant-Based",
 ];
 
 export const ALLERGENS: Allergen[] = [

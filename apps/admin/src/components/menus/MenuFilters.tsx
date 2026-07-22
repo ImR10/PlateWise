@@ -1,10 +1,10 @@
-import { diningLocations } from "../../data/locations";
 import {
   MEAL_PERIODS,
   MENU_STATUSES,
   type MealPeriod,
   type MenuStatus,
 } from "../../data/menuTypes";
+import { useDiningLocations } from "../../state/DiningLocationsProvider";
 import { Button } from "../ui/Button";
 
 export interface MenuFilterState {
@@ -34,6 +34,7 @@ const selectClass =
   "w-full rounded border border-outline-variant bg-surface-container-lowest px-3 py-2 text-body-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
 
 export function MenuFilters({ filters, onChange, onClear }: MenuFiltersProps) {
+  const { locations } = useDiningLocations();
   const active = filtersActive(filters);
 
   return (
@@ -55,7 +56,7 @@ export function MenuFilters({ filters, onChange, onClear }: MenuFiltersProps) {
             }
           >
             <option value="all">All Locations</option>
-            {diningLocations.map((loc) => (
+            {locations.map((loc) => (
               <option key={loc.id} value={loc.id}>
                 {loc.name}
               </option>

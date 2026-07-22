@@ -21,10 +21,9 @@ describe("Routing", () => {
     ).toBeInTheDocument();
   });
 
-  // /menus is now a fully implemented feature; the rest remain placeholders.
+  // Menus, Dining Locations, and Food Catalog are implemented features now;
+  // the rest remain placeholders.
   it.each([
-    ["/locations", "Dining Locations"],
-    ["/foods", "Food Catalog"],
     ["/activity", "Activity"],
     ["/settings", "Settings"],
   ])("renders an intentional placeholder for %s", (route, title) => {

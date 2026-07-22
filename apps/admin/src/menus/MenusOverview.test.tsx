@@ -147,7 +147,7 @@ describe("Menus overview", () => {
     const dialog = screen.getByRole("dialog");
     await user.selectOptions(
       within(dialog).getByLabelText("Dining location"),
-      "loc-e",
+      "loc-a",
     );
     await user.click(
       within(dialog).getByRole("button", { name: /Create Menu/ }),

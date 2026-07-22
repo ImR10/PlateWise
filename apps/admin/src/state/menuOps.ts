@@ -8,12 +8,12 @@ import type {
   Allergen,
   DietaryTag,
   FoodCategory,
-  FoodCatalogItem,
   MealPeriod,
   Menu,
   MenuItem,
   MenuStation,
 } from "../data/menuTypes";
+import type { FoodCatalogItem } from "../data/foodTypes";
 import { createId } from "../lib/ids";
 
 export interface CreateMenuInput {

@@ -152,27 +152,37 @@ pnpm admin:typecheck       # TypeScript
 pnpm admin:build           # type-check + production build
 ```
 
-The dashboard ships the University of Georgia admin overview against typed local mock data: today's
-menu readiness, needs-attention items, dining locations, upcoming menus, recent activity, and quick
+The dashboard ships the Sample University admin overview against typed local mock data: today's menu
+readiness, needs-attention items, dining locations, upcoming menus, recent activity, and quick
 actions.
 
-### Menus (frontend-only)
+### Frontend-only feature areas
 
-The **Menus** section (`/menus`, `/menus/:menuId/edit`, `/menus/:menuId/preview`) is a
-frontend-only MVP:
+Three feature areas are implemented as **frontend-only MVPs**. Every value is generic mock data
+(`Sample University`, `Dining Hall A`–`E`, `Menu Item NN`, `Station A`–`E`, `Category A`–`D`,
+`John Doe`/`Jane Doe`/`System`) held in typed modules under `apps/admin/src/data/`. All edits run
+against **in-memory React state only** and **refreshing the browser resets everything**. There is no
+API, database, persistence, or authentication behind them — backend integration is intentionally
+deferred.
 
-- All data is generic mock data (`Sample University`, `Dining Hall A`–`E`, `Menu Item NN`,
-  `Station A`–`E`, `John Doe`/`Jane Doe`/`System`) held in typed modules under
-  `apps/admin/src/data/`.
-- Edits — creating, duplicating, publishing, drafting, and deleting menus; editing stations and
-  items; publish validation; and preview — all run against **in-memory React state only**
-  (`apps/admin/src/state/MenusProvider.tsx`).
-- **Refreshing the browser resets all changes.** Nothing is saved.
-- There is no API, database, persistence, or authentication behind it. Backend integration is
-  intentionally deferred to a later milestone.
+- **Menus** (`/menus`, `/menus/:menuId/edit`, `/menus/:menuId/preview`) — create, duplicate,
+  publish, draft, delete; station and item editing; publish validation; student preview.
+  State: `apps/admin/src/state/MenusProvider.tsx`.
+- **Dining Locations** (`/locations`, `/locations/new`, `/locations/:locationId/edit`,
+  `/locations/:locationId/preview`) — manage locations with a Draft/Active/Inactive/Archived
+  lifecycle, service configuration (meal periods + stations), weekly operating hours, activation
+  validation, and a student preview. State: `apps/admin/src/state/DiningLocationsProvider.tsx`.
+- **Food Catalog** (`/foods`, `/foods/new`, `/foods/:foodId/edit`, `/foods/:foodId/preview`) —
+  manage food items with a Draft/Active/Archived lifecycle, dietary tags, allergens, serving
+  metadata, activation validation, and a student preview.
+  State: `apps/admin/src/state/FoodCatalogProvider.tsx`.
 
-The remaining sidebar routes (Dining Locations, Food Catalog, Activity, Settings) are intentional
-placeholders. There is no real menu/food persistence yet.
+The Dining Locations and Food Catalog records are shared managed data that the Menus feature also
+consumes: the create-menu location picker offers only active/draft locations (inactive and archived
+are excluded), and the menu food-item picker offers only non-archived catalog items. This
+integration is entirely in memory and resets on refresh.
+
+The remaining sidebar routes (Activity, Settings) are intentional placeholders.
 
 ## Database migrations
 

@@ -1,4 +1,4 @@
-import { SAMPLE_INSTITUTION, diningLocationName } from "../../data/locations";
+import { SAMPLE_INSTITUTION } from "../../data/locations";
 import {
   availabilityLabel,
   availabilityTone,
@@ -6,6 +6,7 @@ import {
   type Menu,
 } from "../../data/menuTypes";
 import { formatDisplayDate } from "../../lib/dates";
+import { useDiningLocations } from "../../state/DiningLocationsProvider";
 import { StatusBadge } from "../ui/StatusBadge";
 
 interface MenuPreviewProps {
@@ -19,6 +20,7 @@ interface MenuPreviewProps {
  * internal notes) are intentionally never shown here.
  */
 export function MenuPreview({ menu, mode, showUnavailable }: MenuPreviewProps) {
+  const { getLocationName } = useDiningLocations();
   const containerClass =
     mode === "mobile"
       ? "max-w-sm mx-auto border border-outline-variant rounded-xl shadow-sm"
@@ -32,9 +34,7 @@ export function MenuPreview({ menu, mode, showUnavailable }: MenuPreviewProps) {
         <p className="text-label-md uppercase opacity-90">
           {SAMPLE_INSTITUTION}
         </p>
-        <h3 className="font-h2 text-h2">
-          {diningLocationName(menu.locationId)}
-        </h3>
+        <h3 className="font-h2 text-h2">{getLocationName(menu.locationId)}</h3>
         <p className="text-body-sm opacity-90">
           {mealPeriodLabel(menu.mealPeriod)} • {formatDisplayDate(menu.date)}
         </p>

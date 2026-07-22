@@ -5,7 +5,6 @@ import { MenuNotFound } from "../components/menus/MenuNotFound";
 import { MenuPreview } from "../components/menus/MenuPreview";
 import { Button } from "../components/ui/Button";
 import { Icon } from "../components/ui/Icon";
-import { diningLocationName } from "../data/locations";
 import {
   mealPeriodLabel,
   menuStatusLabel,
@@ -13,12 +12,14 @@ import {
 } from "../data/menuTypes";
 import { formatShortDate } from "../lib/dates";
 import { StatusBadge } from "../components/ui/StatusBadge";
+import { useDiningLocations } from "../state/DiningLocationsProvider";
 import { useMenus } from "../state/MenusProvider";
 
 export function MenuPreviewPage() {
   const { menuId } = useParams();
   const navigate = useNavigate();
   const { getMenu } = useMenus();
+  const { getLocationName } = useDiningLocations();
   const menu = menuId ? getMenu(menuId) : undefined;
 
   const [mode, setMode] = useState<"desktop" | "mobile">("desktop");
@@ -51,7 +52,7 @@ export function MenuPreviewPage() {
         <div className="flex flex-wrap items-center gap-3">
           <div>
             <h2 className="font-h2 text-h2">
-              {diningLocationName(menu.locationId)}
+              {getLocationName(menu.locationId)}
             </h2>
             <p className="text-body-sm text-secondary">
               {mealPeriodLabel(menu.mealPeriod)} • {formatShortDate(menu.date)}

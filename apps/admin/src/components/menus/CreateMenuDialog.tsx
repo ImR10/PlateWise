@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
-import { diningLocations } from "../../data/locations";
 import { MEAL_PERIODS, type MealPeriod } from "../../data/menuTypes";
+import { useDiningLocations } from "../../state/DiningLocationsProvider";
 import type { CreateMenuInput } from "../../state/menuOps";
 import { Button } from "../ui/Button";
 import { Dialog } from "../ui/Dialog";
@@ -23,6 +23,7 @@ export function CreateMenuDialog({
   onClose,
   onCreate,
 }: CreateMenuDialogProps) {
+  const { selectableLocations } = useDiningLocations();
   const [locationId, setLocationId] = useState("");
   const [date, setDate] = useState(defaultDate);
   const [mealPeriod, setMealPeriod] = useState<MealPeriod>("breakfast");
@@ -86,7 +87,7 @@ export function CreateMenuDialog({
             aria-describedby={error ? "create-location-error" : undefined}
           >
             <option value="">Select a location</option>
-            {diningLocations.map((loc) => (
+            {selectableLocations.map((loc) => (
               <option key={loc.id} value={loc.id}>
                 {loc.name}
               </option>

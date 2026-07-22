@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { foodCatalog } from "../../data/foods";
 import {
   ALLERGENS,
   DIETARY_TAGS,
@@ -10,6 +9,7 @@ import {
   type FoodCategory,
   type MenuItem,
 } from "../../data/menuTypes";
+import { useFoodCatalog } from "../../state/FoodCatalogProvider";
 import { menuItemFromCatalog, menuItemFromCustom } from "../../state/menuOps";
 import { Button } from "../ui/Button";
 import { Dialog } from "../ui/Dialog";
@@ -44,6 +44,8 @@ export function FoodCatalogDialog({
   onClose,
   onAdd,
 }: FoodCatalogDialogProps) {
+  // Only active/draft (non-archived) catalog items may be added to menus.
+  const { selectableFoods } = useFoodCatalog();
   const [mode, setMode] = useState<"catalog" | "custom">("catalog");
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<FoodCategory | "all">("all");
@@ -78,7 +80,7 @@ export function FoodCatalogDialog({
 
   const results = useMemo(
     () =>
-      foodCatalog.filter((item) => {
+      selectableFoods.filter((item) => {
         if (
           search.trim() &&
           !item.name.toLowerCase().includes(search.trim().toLowerCase())
@@ -89,11 +91,11 @@ export function FoodCatalogDialog({
           return false;
         return true;
       }),
-    [search, category, dietary],
+    [selectableFoods, search, category, dietary],
   );
 
   const addSelected = () => {
-    const items = foodCatalog
+    const items = selectableFoods
       .filter((item) => selected.includes(item.id))
       .map(menuItemFromCatalog);
     if (items.length === 0) return;
