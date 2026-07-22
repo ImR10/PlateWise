@@ -10,7 +10,6 @@
     "user:format": "pnpm --filter @platewise/user format",
     "user:format:check": "pnpm --filter @platewise/user format:check",
     "admin:dev": "pnpm --filter @platewise/admin dev",
-    "admin:desktop": "pnpm --filter @platewise/admin tauri dev",
     "admin:build": "pnpm --filter @platewise/admin build",
     "admin:test": "pnpm --filter @platewise/admin test",
     "admin:lint": "pnpm --filter @platewise/admin lint",

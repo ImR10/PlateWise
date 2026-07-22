@@ -18,7 +18,7 @@ recommendations, and user preferences are planned capabilities and are not imple
 | Application | Stack | Port | Purpose |
 | --- | --- | --- | --- |
 | `user` | Next.js, TypeScript, Tailwind CSS | `3000` | Student-facing interface (mobile-first) |
-| `admin` | Tauri 2, React, TypeScript | native window | Dining-hall staff desktop app (host-run, not in Compose) |
+| `admin` | Vite, React, TypeScript, Tailwind CSS | `1420` | Dining-hall staff admin website (host-run, not in Compose) |
 | `api` | FastAPI | `8000` | Single backend shared by both clients |
 | `db` | SQLAlchemy, Alembic, PostgreSQL 17 | `5432` | Persistence package and database service |
 
@@ -29,7 +29,7 @@ See [docs/architecture.md](docs/architecture.md) for design rationale and future
 ```text
 apps/
   user/                Next.js application and component tests
-  admin/               Tauri desktop application for dining-hall staff
+  admin/               Vite + React admin website for dining-hall staff
 api/                    FastAPI service, orchestration, schemas, and tests
 db/                     SQLAlchemy models, repositories, migrations, and tests
 docs/
@@ -51,8 +51,8 @@ editable `platewise-db` package; neither client connects to PostgreSQL directly.
 - About 2 GB of free disk space for images and development volumes
 
 Node, Python, pnpm, uv, and PostgreSQL do not need to be installed on the host for the Docker
-workflow, which covers `db`, `api`, and `user`. The admin desktop app is the exception: it runs on
-the host, not in Compose. See [Admin desktop app](#admin-desktop-app).
+workflow, which covers `db`, `api`, and `user`. The admin website is the exception: it runs on the
+host with Node and pnpm, not in Compose. See [Admin website](#admin-website).
 
 ## Initial setup
 
@@ -129,34 +129,74 @@ docker compose exec api uv run ruff format src tests
 pnpm user:format
 ```
 
-## Admin desktop app
+## Admin website
 
-`apps/admin` is a separate desktop application for dining-hall staff, built with Tauri 2, React,
-and TypeScript. It is a native window, so it runs on the host rather than inside Docker Compose.
-`api` remains the single backend for both clients; the admin app has no backend of its own
+`apps/admin` is a separate browser-based website for dining-hall staff, built with Vite, React,
+TypeScript, and Tailwind CSS. It runs on the host as a standard web app rather than inside Docker
+Compose. `api` remains the single backend for both clients; the admin app has no backend of its own
 and never connects to PostgreSQL directly.
 
 Additional host prerequisites (admin development only):
 
 - Node.js 22+ with pnpm 11 (`corepack enable` provides the pinned version)
-- Rust stable 1.77.2 or newer via [rustup](https://rustup.rs) (macOS also needs the Xcode
-  Command Line Tools)
 
 Everyday commands, from the repository root:
 
 ```bash
 pnpm install               # once, and after dependency changes
-pnpm admin:desktop         # run the native desktop app (Tauri dev mode, hot reload)
-pnpm admin:dev             # frontend only, in a browser at http://localhost:1420
-pnpm admin:test            # component smoke tests (Vitest)
+pnpm admin:dev             # run the dev server at http://localhost:1420
+pnpm admin:test            # component and routing tests (Vitest)
 pnpm admin:lint            # ESLint
 pnpm admin:format:check    # Prettier
 pnpm admin:typecheck       # TypeScript
-pnpm admin:build           # type-check + production frontend build
+pnpm admin:build           # type-check + production build
 ```
 
-The current milestone ships only the application-shell foundation: the window opens and renders,
-with no API integration, authentication, or catalog features yet.
+The dashboard ships the Sample University admin overview against typed local mock data: today's menu
+readiness, needs-attention items, dining locations, upcoming menus, recent activity, and quick
+actions.
+
+### Frontend-only feature areas
+
+Three feature areas are implemented as **frontend-only MVPs**. Every value is generic mock data
+(`Sample University`, `Dining Hall A`–`E`, `Menu Item NN`, `Station A`–`E`, `Category A`–`D`,
+`John Doe`/`Jane Doe`/`System`) held in typed modules under `apps/admin/src/data/`. All edits run
+against **in-memory React state only** and **refreshing the browser resets everything**. There is no
+API, database, persistence, or authentication behind them — backend integration is intentionally
+deferred.
+
+- **Menus** (`/menus`, `/menus/:menuId/edit`, `/menus/:menuId/preview`) — create, duplicate,
+  publish, draft, delete; station and item editing; publish validation; student preview.
+  State: `apps/admin/src/state/MenusProvider.tsx`.
+- **Dining Locations** (`/locations`, `/locations/new`, `/locations/:locationId/edit`,
+  `/locations/:locationId/preview`) — manage locations with a Draft/Active/Inactive/Archived
+  lifecycle, service configuration (meal periods + stations), weekly operating hours, activation
+  validation, and a student preview. State: `apps/admin/src/state/DiningLocationsProvider.tsx`.
+- **Food Catalog** (`/foods`, `/foods/new`, `/foods/:foodId/edit`, `/foods/:foodId/preview`) —
+  manage food items with a Draft/Active/Archived lifecycle, dietary tags, allergens, serving
+  metadata, activation validation, and a student preview.
+  State: `apps/admin/src/state/FoodCatalogProvider.tsx`.
+
+- **Analysis** (`/analysis`) — an operations-analytics MVP for dining administrators. It surfaces
+  recommendation demand, estimated student selections/consumption, recommendation-to-selection
+  rates, and advisory inventory-planning signals (possible shortage / overproduction risk),
+  availability and unmet-demand, waste-risk estimates, and a data-source/quality panel. It is driven
+  entirely by deterministic mock events (`apps/admin/src/data/analysis.ts`) with pure derivations
+  (`apps/admin/src/lib/analysis.ts`); filter state is page-local. **All consumption, prepared-serving,
+  and waste figures are estimates derived from mock event counts — never confirmed consumption or
+  inventory.** The page clearly labels estimates, disables the export control until integration, and
+  is intended to be validated with dining-hall admins during the pitch (which metrics are useful,
+  which are misleading, what data they already collect, and what systems PlateWise could integrate
+  with). Real analytics would require backend event tracking and dining-system integrations
+  (recommendation/selection events, servings prepared/taken, leftovers, POS, and inventory).
+
+The Dining Locations and Food Catalog records are shared managed data that the Menus feature also
+consumes: the create-menu location picker offers only active/draft locations (inactive and archived
+are excluded), and the menu food-item picker offers only non-archived catalog items. The Analysis
+tab resolves its food and location names from the same managed records. This integration is entirely
+in memory and resets on refresh.
+
+The remaining sidebar route (Settings) is an intentional placeholder.
 
 ## Database migrations
 

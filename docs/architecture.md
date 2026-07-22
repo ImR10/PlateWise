@@ -3,35 +3,44 @@
 ## Current foundation
 
 PlateWise is a small monorepo with three client/backend applications backed by PostgreSQL:
-a student-facing web app, a dining-hall staff desktop app, and a shared API. Docker Compose
+a student-facing web app, a dining-hall staff admin website, and a shared API. Docker Compose
 provides a reproducible development environment for the user, API, and database services without
-forcing either developer to install matching language runtimes or databases locally; the desktop
-app runs on the host.
+forcing either developer to install matching language runtimes or databases locally; the admin
+website runs on the host.
 
 ```text
-Browser        -> Next.js user (apps/user)  -> FastAPI API (api) -> platewise_db -> PostgreSQL
-Desktop window -> Tauri admin (apps/admin) -> FastAPI API (api) -> platewise_db -> PostgreSQL
+Browser -> Next.js user (apps/user)  -> FastAPI API (api) -> platewise_db -> PostgreSQL
+Browser -> Vite admin (apps/admin)   -> FastAPI API (api) -> platewise_db -> PostgreSQL
 ```
 
 The web frontend performs a server-side typed status request to the API. The API exposes versioned
 routes and owns database access. This boundary makes it possible for any client — the student web
-app, the admin desktop app, or a later mobile client — to reuse the same API without coupling
+app, the admin website, or a later mobile client — to reuse the same API without coupling
 nutrition logic to a particular frontend.
 
 ## Client applications
 
 - **`apps/user` — student web app.** Next.js, mobile-first, served in the browser.
-- **`apps/admin` — staff desktop app.** Tauri 2 + React + TypeScript, desktop-first, distributed
-  as a native application. It exists as a separate application (not routes inside `apps/user`)
-  because dining-hall staff have materially different interaction patterns, security requirements,
-  deployment considerations, and future native capabilities from students. As of the current
-  milestone it is an application-shell foundation only: no API integration, authentication, or
-  catalog features yet.
+- **`apps/admin` — staff admin website.** Vite + React + TypeScript + Tailwind CSS, a standard
+  browser-based single-page application. It exists as a separate application (not routes inside
+  `apps/user`) because dining-hall staff have materially different interaction patterns, security
+  requirements, and deployment considerations from students. As of the current milestone it ships
+  the Sample University admin dashboard plus four frontend-only feature areas — **Menus**, **Dining
+  Locations**, **Food Catalog** (each with overview, create/edit, and student preview), and an
+  **Analysis** operations-analytics tab — against typed local mock data. Dining locations and food
+  items are shared managed records that Menus also consumes (inactive/archived locations and archived
+  foods are excluded from menu pickers), and Analysis reads the same records for its labels. The
+  Analysis tab is deliberately honest: recommendation demand comes from deterministic mock events,
+  while all consumption, prepared-serving, and waste figures are clearly labelled estimates — real
+  analytics would require backend event tracking and dining-system integrations, to be validated with
+  stakeholders. All edits live in in-memory React state only and reset on refresh; Settings remains a
+  placeholder route. There is no API integration, authentication, or persistence behind these screens yet —
+  backend integration is intentionally deferred.
 
 The repository has four explicit ownership boundaries:
 
-1. **`apps/user` and `apps/admin` are clients only.** `apps/` contains no backend or persistence
-   implementation.
+1. **`apps/user` and `apps/admin` are browser clients only.** `apps/` contains no backend or
+   persistence implementation.
 2. **`api` is the single backend.** It owns HTTP routes, configuration, API schemas, import
    orchestration, and recommendation logic.
 3. **`db` owns persistence.** The `platewise_db` package owns SQLAlchemy models, sessions,
