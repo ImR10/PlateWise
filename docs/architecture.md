@@ -25,12 +25,16 @@ nutrition logic to a particular frontend.
   browser-based single-page application. It exists as a separate application (not routes inside
   `apps/user`) because dining-hall staff have materially different interaction patterns, security
   requirements, and deployment considerations from students. As of the current milestone it ships
-  the Sample University admin dashboard plus three frontend-only feature areas — **Menus**, **Dining
-  Locations**, and **Food Catalog** (each with overview, create/edit, and student preview) — against
-  typed local mock data. Dining locations and food items are shared managed records that Menus also
-  consumes (inactive/archived locations and archived foods are excluded from menu pickers). All edits
-  live in in-memory React state only and reset on refresh; Activity and Settings remain placeholder
-  routes. There is no API integration, authentication, or persistence behind these screens yet —
+  the Sample University admin dashboard plus four frontend-only feature areas — **Menus**, **Dining
+  Locations**, **Food Catalog** (each with overview, create/edit, and student preview), and an
+  **Analysis** operations-analytics tab — against typed local mock data. Dining locations and food
+  items are shared managed records that Menus also consumes (inactive/archived locations and archived
+  foods are excluded from menu pickers), and Analysis reads the same records for its labels. The
+  Analysis tab is deliberately honest: recommendation demand comes from deterministic mock events,
+  while all consumption, prepared-serving, and waste figures are clearly labelled estimates — real
+  analytics would require backend event tracking and dining-system integrations, to be validated with
+  stakeholders. All edits live in in-memory React state only and reset on refresh; Settings remains a
+  placeholder route. There is no API integration, authentication, or persistence behind these screens yet —
   backend integration is intentionally deferred.
 
 The repository has four explicit ownership boundaries:

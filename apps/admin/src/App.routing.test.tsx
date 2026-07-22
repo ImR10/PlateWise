@@ -21,20 +21,20 @@ describe("Routing", () => {
     ).toBeInTheDocument();
   });
 
-  // Menus, Dining Locations, and Food Catalog are implemented features now;
-  // the rest remain placeholders.
-  it.each([
-    ["/activity", "Activity"],
-    ["/settings", "Settings"],
-  ])("renders an intentional placeholder for %s", (route, title) => {
-    renderWithRouter(<App />, { route });
+  // Menus, Dining Locations, Food Catalog, and Analysis are implemented
+  // features now; Settings remains the only placeholder route.
+  it.each([["/settings", "Settings"]])(
+    "renders an intentional placeholder for %s",
+    (route, title) => {
+      renderWithRouter(<App />, { route });
 
-    // The page body heading (h2) — distinct from the top-bar h1 of the same name.
-    expect(
-      screen.getByRole("heading", { name: title, level: 2 }),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Not yet implemented")).toBeInTheDocument();
-  });
+      // The page body heading (h2) — distinct from the top-bar h1 of the same name.
+      expect(
+        screen.getByRole("heading", { name: title, level: 2 }),
+      ).toBeInTheDocument();
+      expect(screen.getByText("Not yet implemented")).toBeInTheDocument();
+    },
+  );
 
   it("renders a not-found placeholder for unknown routes", () => {
     renderWithRouter(<App />, { route: "/nope" });

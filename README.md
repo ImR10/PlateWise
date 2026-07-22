@@ -177,12 +177,26 @@ deferred.
   metadata, activation validation, and a student preview.
   State: `apps/admin/src/state/FoodCatalogProvider.tsx`.
 
+- **Analysis** (`/analysis`) — an operations-analytics MVP for dining administrators. It surfaces
+  recommendation demand, estimated student selections/consumption, recommendation-to-selection
+  rates, and advisory inventory-planning signals (possible shortage / overproduction risk),
+  availability and unmet-demand, waste-risk estimates, and a data-source/quality panel. It is driven
+  entirely by deterministic mock events (`apps/admin/src/data/analysis.ts`) with pure derivations
+  (`apps/admin/src/lib/analysis.ts`); filter state is page-local. **All consumption, prepared-serving,
+  and waste figures are estimates derived from mock event counts — never confirmed consumption or
+  inventory.** The page clearly labels estimates, disables the export control until integration, and
+  is intended to be validated with dining-hall admins during the pitch (which metrics are useful,
+  which are misleading, what data they already collect, and what systems PlateWise could integrate
+  with). Real analytics would require backend event tracking and dining-system integrations
+  (recommendation/selection events, servings prepared/taken, leftovers, POS, and inventory).
+
 The Dining Locations and Food Catalog records are shared managed data that the Menus feature also
 consumes: the create-menu location picker offers only active/draft locations (inactive and archived
-are excluded), and the menu food-item picker offers only non-archived catalog items. This
-integration is entirely in memory and resets on refresh.
+are excluded), and the menu food-item picker offers only non-archived catalog items. The Analysis
+tab resolves its food and location names from the same managed records. This integration is entirely
+in memory and resets on refresh.
 
-The remaining sidebar routes (Activity, Settings) are intentional placeholders.
+The remaining sidebar route (Settings) is an intentional placeholder.
 
 ## Database migrations
 

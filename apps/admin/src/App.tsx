@@ -1,6 +1,7 @@
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 
 import { AdminLayout } from "./components/layout/AdminLayout";
+import { AnalysisPage } from "./pages/AnalysisPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { FoodFormPage } from "./pages/FoodFormPage";
 import { FoodPreviewPage } from "./pages/FoodPreviewPage";
@@ -65,16 +66,9 @@ export default function App() {
               element={<FoodPreviewPage />}
             />
 
-            <Route
-              path="/activity"
-              element={
-                <PlaceholderPage
-                  title="Activity"
-                  icon="history"
-                  description="Review the full history of staff and system actions. Coming in a later milestone."
-                />
-              }
-            />
+            {/* Analysis feature */}
+            <Route path="/analysis" element={<AnalysisPage />} />
+
             <Route
               path="/settings"
               element={

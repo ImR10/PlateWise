@@ -41,7 +41,7 @@ export const navItems: NavItem[] = [
   { label: "Menus", icon: "restaurant_menu", path: "/menus" },
   { label: "Dining Locations", icon: "location_on", path: "/locations" },
   { label: "Food Catalog", icon: "inventory_2", path: "/foods" },
-  { label: "Activity", icon: "history", path: "/activity" },
+  { label: "Analysis", icon: "insights", path: "/analysis" },
   { label: "Settings", icon: "settings", path: "/settings" },
 ];
 

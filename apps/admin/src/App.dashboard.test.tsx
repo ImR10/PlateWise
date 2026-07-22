@@ -79,7 +79,7 @@ describe("Dashboard content", () => {
       "Menus",
       "Dining Locations",
       "Food Catalog",
-      "Activity",
+      "Analysis",
       "Settings",
     ]) {
       expect(
