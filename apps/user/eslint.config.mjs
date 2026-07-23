@@ -5,7 +5,7 @@ const config = [
   ...nextVitals,
   ...nextTypeScript,
   {
-    ignores: [".next/**", "coverage/**", "next-env.d.ts"],
+    ignores: [".next/**", "coverage/**", "next-env.d.ts", "**/*.gen.ts"],
   },
 ];
 

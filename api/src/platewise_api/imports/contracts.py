@@ -97,6 +97,9 @@ class ImportedMenuItem(_Contract):
 
     source_system: str = Field(min_length=1, max_length=MAX_SOURCE_SYSTEM_LENGTH)
     external_id: str | None = Field(default=None, max_length=MAX_EXTERNAL_ID_LENGTH)
+    #: Optional source identity for this dated/location-specific offering.
+    #: Falls back to ``external_id`` for sources that use one identity for both.
+    offering_external_id: str | None = Field(default=None, max_length=MAX_EXTERNAL_ID_LENGTH)
     name: str = Field(max_length=MAX_NAME_LENGTH)
     description: str | None = Field(default=None, max_length=MAX_DESCRIPTION_LENGTH)
     serving_size: ServingDecimal | None = None

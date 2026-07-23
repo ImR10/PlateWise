@@ -5,9 +5,10 @@ students find foods that match their preferences and goals. The intended experie
 individual menu items and suggest practical meal combinations using inputs such as calorie ranges,
 protein targets, vegetarian or vegan preferences, and allergen exclusions.
 
-The current repository is an application foundation: it provides a responsive Next.js frontend, a
-typed FastAPI backend, and PostgreSQL persistence. Menu ingestion, nutrition normalization,
-recommendations, and user preferences are planned capabilities and are not implemented yet.
+The current repository provides a responsive Next.js frontend, a Vite admin frontend, a typed
+FastAPI backend, PostgreSQL persistence, and tested import, nutrition, and recommendation
+foundations. The public HTTP surface is still intentionally small (health and status); the admin
+feature pages use in-memory mock data and are not connected to backend resource endpoints.
 
 > PlateWise is an independent student-built proof of concept and is not affiliated with, endorsed
 > by, or an official service of the University of Georgia or any dining-data provider. Users should
@@ -50,21 +51,29 @@ editable `platewise-db` package; neither client connects to PostgreSQL directly.
 - Git
 - About 2 GB of free disk space for images and development volumes
 
-Node, Python, pnpm, uv, and PostgreSQL do not need to be installed on the host for the Docker
-workflow, which covers `db`, `api`, and `user`. The admin website is the exception: it runs on the
-host with Node and pnpm, not in Compose. See [Admin website](#admin-website).
+Node, Python, pnpm, uv, and PostgreSQL do not need to be installed on the host for the Compose-only
+workflow, which covers `db`, `api`, and `user`. Node and pnpm are required on the host for the admin
+website and API contract generation. See [Admin website](#admin-website).
 
 ## Initial setup
 
 ```bash
 git clone <repository-url>
-cd platewise
+cd PlateWise
 cp .env.example .env
-docker compose up --build
+docker compose up -d --build
+docker compose exec -w /workspace/db api uv run --project /workspace/api alembic upgrade head
 ```
 
-Open [http://localhost:3000](http://localhost:3000). API docs are available at
-[http://localhost:8000/docs](http://localhost:8000/docs).
+This starts PostgreSQL, the API, and the user app. Open:
+
+- User app: [http://localhost:3000](http://localhost:3000)
+- API: [http://localhost:8000](http://localhost:8000)
+- API docs: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+The admin app runs separately on the host. After installing the pinned workspace dependencies with
+`pnpm install`, run `pnpm admin:dev` and open
+[http://localhost:1420](http://localhost:1420).
 
 The values in `.env.example` are local-development defaults only. Change them for any shared or
 deployed environment. Never commit `.env`.
@@ -78,9 +87,24 @@ deployed environment. Never commit `.env`.
 | `POSTGRES_PASSWORD` | db | Development database password |
 | `DATABASE_URL` | api | SQLAlchemy connection URL using Compose hostname `db` |
 | `APP_ENV` | api | Runtime environment label |
-| `CORS_ORIGINS` | api | Comma-separated allowed browser origins |
+| `CORS_ORIGINS` | api | Comma-separated allowed browser origins (both the user app on `3000` and the admin app on `1420`) |
 | `API_INTERNAL_URL` | user | Server-side URL used inside Compose |
 | `NEXT_PUBLIC_API_URL` | user | Browser-visible API base URL reserved for client calls |
+| `VITE_API_URL` | admin | Optional API base URL override for the host-run admin app (defaults to `http://localhost:8000`) |
+
+Compose reads the first eight values from the root `.env`. `CORS_ORIGINS` is a comma-separated list
+of exact origins (scheme, host, and port); the defaults allow
+`http://localhost:3000` and `http://localhost:1420`. After changing an API environment value,
+recreate the API service with `docker compose up -d --force-recreate api`.
+
+The current user status request runs on the Next.js server and uses `API_INTERNAL_URL`
+(`http://api:8000` inside Compose). `NEXT_PUBLIC_API_URL` is reserved for future browser-side user
+requests and is not currently read by application code. Because the admin app runs on the host,
+override its API URL either in the command environment:
+
+```bash
+VITE_API_URL=http://localhost:8000 pnpm admin:dev
+```
 
 ## Everyday Docker workflow
 
@@ -89,6 +113,9 @@ docker compose up --build
 docker compose logs -f
 docker compose down
 ```
+
+To run only the database and API, use `docker compose up --build db api`. Add `user` to that command
+when the user frontend is needed. The admin frontend always runs separately with `pnpm admin:dev`.
 
 Source directories are bind-mounted and both app services hot reload. Dependencies live in named
 volumes so Linux container packages never overwrite host directories.
@@ -128,6 +155,114 @@ Apply automatic formatting with:
 docker compose exec api uv run ruff format src tests
 pnpm user:format
 ```
+
+## API error format
+
+Exceptions and request-validation failures handled by the application use one standard envelope
+(see `api/src/platewise_api/schemas/errors.py` and the handlers in
+`api/src/platewise_api/core/errors.py`):
+
+```json
+{
+  "error": {
+    "code": "validation_error",
+    "message": "Request validation failed.",
+    "details": [
+      {
+        "loc": ["query", "count"],
+        "msg": "Input should be a valid integer.",
+        "type": "int_parsing"
+      }
+    ],
+    "context": null
+  }
+}
+```
+
+`code` is stable and machine-readable; clients branch on it, never on `message`. Endpoints raise
+`platewise_api.core.errors.ApiError` for intentional failures; framework validation and HTTP errors
+are translated into the same shape automatically, and headers such as `WWW-Authenticate` are
+preserved. Unexpected exceptions are logged and return a generic `500` envelope with code
+`internal_error`; exception text and stack traces are not returned. `details` is populated for
+request-validation errors and is otherwise normally `null`; `context` is optional structured data
+from an intentional `ApiError`.
+
+The operational `/health` route is the deliberate exception: when PostgreSQL is unavailable it
+returns its documented `503` health payload (`status: "degraded"`, `database: "unavailable"`) rather
+than an exception envelope.
+
+## Generated TypeScript API types
+
+FastAPI's OpenAPI schema is the source of truth for frontend contracts. Generated files are
+committed and must never be edited by hand:
+
+- `apps/user/lib/api-schema.gen.ts`
+- `apps/admin/src/api/schema.gen.ts`
+
+Regenerate after any backend contract change and commit the result:
+
+```bash
+pnpm install
+pnpm api:types
+```
+
+The script (`scripts/generate-api-types.sh`) exports the schema with
+`api/scripts/export_openapi.py` — using `api/.venv` when present, otherwise the running Compose
+`api` service — and runs `openapi-typescript` for both apps. The admin HTTP client
+(`apps/admin/src/api/client.ts`) consumes these types, including the error envelope.
+
+`pnpm install` is required once on the host. If there is no local `api/.venv`, start the API first
+with `docker compose up -d db api`. A successful regeneration should change the generated files only
+when the FastAPI contract changed.
+
+## Admin HTTP client
+
+`apps/admin/src/api/client.ts` is a small shared transport foundation; no admin page uses it yet.
+Application-facing endpoint modules can use the exported `apiClient`, while tests can inject a
+`fetch` implementation through `createApiClient`. It:
+
+- resolves the base URL from an explicit option, then `VITE_API_URL`, then
+  `http://localhost:8000`;
+- sends and parses JSON, treats empty successful responses as having no body, and supports
+  `AbortSignal`;
+- converts API envelopes, network failures, and malformed responses into `ApiRequestError` while
+  leaving cancellation distinguishable;
+- applies default, injected, and caller headers in that order, with caller headers taking
+  precedence.
+
+It is transport plumbing, not a generated SDK, authentication implementation, or evidence that the
+mock admin pages are connected to the backend.
+
+## Seed development data
+
+The deterministic development seed runs the real import pipeline in strict mode. It creates the
+Sample University institution, two dining halls, five stations, twelve stable catalog items,
+twelve offerings for each selected date, nutrition on both the source-provided and
+recipe-calculated paths, and allergen/dietary-tag links. Apply migrations first, then seed today:
+
+```bash
+pnpm db:seed
+```
+
+`pnpm db:seed` requires the Compose API service to be running and uses today's date. For an explicit
+date, a same-date idempotency check, and a second date:
+
+```bash
+docker compose exec api uv run python -m platewise_api.dev.seed --date 2026-07-23
+docker compose exec api uv run python -m platewise_api.dev.seed --date 2026-07-23
+docker compose exec api uv run python -m platewise_api.dev.seed --date 2026-07-24
+```
+
+Menu-item identity remains stable across dates, while offering identity includes the item, station,
+date, and meal period. Re-running the same date creates another import audit row but does not
+duplicate catalog items, offerings, nutrition, or metadata links. Seeding a second date keeps the
+same twelve catalog items and adds twelve offerings for that date.
+
+All seed records use the `platewise_seed` source system. Allergen and dietary-tag links are applied
+directly through the ORM only after a fully successful import, are marked with `imported`
+provenance—not `official`—and are a temporary persistence bridge until the import pipeline handles
+that metadata itself. An unsuccessful strict import exits nonzero, rolls back its catalog work, and
+does not apply the metadata supplement.
 
 ## Admin website
 
@@ -229,14 +364,21 @@ docker compose exec -w /workspace/db api uv run --project /workspace/api alembic
 
 ## Troubleshooting
 
-- **A port is already in use:** stop the process using `3000`, `8000`, or `5432`, or adjust the host
-  side of that mapping in `compose.yaml`.
+- **A port is already in use:** stop the process using `1420`, `3000`, `8000`, or `5432`, or adjust
+  the relevant host port. Compose mappings live in `compose.yaml`; the admin port is in
+  `apps/admin/vite.config.ts`.
 - **A service is unhealthy:** run `docker compose ps` and `docker compose logs api db user`.
 - **Dependencies look stale:** rebuild the affected image and recreate its dependency volume with
   `docker compose down -v` only if a normal rebuild does not resolve it. Note that `-v` also deletes
   the development database.
 - **The status panel says unavailable:** confirm `api` is healthy and that `API_INTERNAL_URL` remains
   `http://api:8000` inside Compose.
+- **The admin cannot reach the API:** confirm the API is available at the configured `VITE_API_URL`
+  and that the admin page's exact origin is present in `CORS_ORIGINS`.
+- **`pnpm api:types` cannot export the schema:** run `pnpm install`, then either create the local
+  `api/.venv` or start `db` and `api` with `docker compose up -d db api`.
+- **Seeding fails:** apply migrations, confirm the API service is running, and inspect
+  `docker compose logs api db`. A failed strict seed intentionally exits nonzero.
 - **Database credentials changed:** recreate the database volume; PostgreSQL initialization variables
   do not modify an existing volume.
 

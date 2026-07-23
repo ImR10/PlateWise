@@ -238,13 +238,14 @@ def upsert_offering(
     import_run: DataImport,
 ) -> tuple[MenuOffering, Outcome]:
     assert imported.service_date is not None and imported.meal_period is not None
+    offering_external_id = getattr(imported, "offering_external_id", None) or imported.external_id
     existing: MenuOffering | None = None
-    if imported.external_id:
+    if offering_external_id:
         existing = session.scalar(
             select(MenuOffering).where(
                 MenuOffering.station_id == station.id,
                 MenuOffering.source_system == imported.source_system,
-                MenuOffering.external_id == imported.external_id,
+                MenuOffering.external_id == offering_external_id,
             )
         )
     if existing is None:
@@ -262,7 +263,7 @@ def upsert_offering(
             station_id=station.id,
             menu_item_id=menu_item.id,
             source_system=imported.source_system,
-            external_id=imported.external_id,
+            external_id=offering_external_id,
             service_date=imported.service_date,
             meal_period=imported.meal_period,
             created_by_import_id=import_run.id,
