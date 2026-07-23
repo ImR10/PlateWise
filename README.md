@@ -78,9 +78,10 @@ deployed environment. Never commit `.env`.
 | `POSTGRES_PASSWORD` | db | Development database password |
 | `DATABASE_URL` | api | SQLAlchemy connection URL using Compose hostname `db` |
 | `APP_ENV` | api | Runtime environment label |
-| `CORS_ORIGINS` | api | Comma-separated allowed browser origins |
+| `CORS_ORIGINS` | api | Comma-separated allowed browser origins (both the user app on `3000` and the admin app on `1420`) |
 | `API_INTERNAL_URL` | user | Server-side URL used inside Compose |
 | `NEXT_PUBLIC_API_URL` | user | Browser-visible API base URL reserved for client calls |
+| `VITE_API_URL` | admin | Optional API base URL override for the host-run admin app (defaults to `http://localhost:8000`) |
 
 ## Everyday Docker workflow
 
@@ -128,6 +129,57 @@ Apply automatic formatting with:
 docker compose exec api uv run ruff format src tests
 pnpm user:format
 ```
+
+## API error format
+
+Non-2xx responses from the API use one standard envelope (see
+`api/src/platewise_api/schemas/errors.py` and the handlers in
+`api/src/platewise_api/core/errors.py`):
+
+```json
+{ "error": { "code": "validation_error", "message": "…", "details": [], "context": null } }
+```
+
+`code` is stable and machine-readable; clients branch on it, never on `message`. Endpoints raise
+`platewise_api.core.errors.ApiError` for intentional failures; framework validation and HTTP errors
+are translated into the same shape automatically.
+
+## Generated TypeScript API types
+
+FastAPI's OpenAPI schema is the source of truth for frontend contracts. Generated files are
+committed and must never be edited by hand:
+
+- `apps/user/lib/api-schema.gen.ts`
+- `apps/admin/src/api/schema.gen.ts`
+
+Regenerate after any backend contract change and commit the result:
+
+```bash
+pnpm api:types
+```
+
+The script (`scripts/generate-api-types.sh`) exports the schema with
+`api/scripts/export_openapi.py` — using `api/.venv` when present, otherwise the running Compose
+`api` service — and runs `openapi-typescript` for both apps. The admin HTTP client
+(`apps/admin/src/api/client.ts`) consumes these types, including the error envelope.
+
+## Seed development data
+
+An idempotent seed runs the real import pipeline (`run_import` with the fixture source), so seeded
+rows get the same validation, normalization, and provenance as a real import. It creates the Sample
+University institution, two dining halls, five stations, twelve menu items with offerings for the
+chosen date, nutrition on both the source-provided and recipe-calculated paths, and allergen /
+dietary-tag links. Apply migrations first, then:
+
+```bash
+pnpm db:seed
+```
+
+which runs `python -m platewise_api.dev.seed` inside the Compose `api` service. Pass a date with
+`docker compose exec api uv run python -m platewise_api.dev.seed --date 2026-07-23` (default:
+today). Re-running for the same date is a no-op: records upsert on stable external ids under the
+`platewise_seed` source system. Allergen and dietary-tag links are applied directly via the ORM as
+a documented stopgap until the import pipeline persists that metadata itself.
 
 ## Admin website
 

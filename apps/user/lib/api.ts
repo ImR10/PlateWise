@@ -1,8 +1,7 @@
-export type ApiStatus = {
-  service: string;
-  status: "ok";
-  environment: string;
-};
+import type { components } from "./api-schema.gen";
+
+/** Generated from the FastAPI OpenAPI schema — regenerate with `pnpm api:types`. */
+export type ApiStatus = components["schemas"]["StatusResponse"];
 
 export type ApiStatusResult =
   | { connected: true; data: ApiStatus }

@@ -3,6 +3,8 @@
   "private": true,
   "packageManager": "pnpm@11.13.1",
   "scripts": {
+    "api:types": "bash scripts/generate-api-types.sh",
+    "db:seed": "docker compose exec api uv run python -m platewise_api.dev.seed",
     "user:dev": "pnpm --filter @platewise/user dev",
     "user:build": "pnpm --filter @platewise/user build",
     "user:test": "pnpm --filter @platewise/user test",
@@ -16,5 +18,8 @@
     "admin:format": "pnpm --filter @platewise/admin format",
     "admin:format:check": "pnpm --filter @platewise/admin format:check",
     "admin:typecheck": "pnpm --filter @platewise/admin typecheck"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.13.0"
   }
 }
